@@ -175,15 +175,51 @@
             </section>
 
             <div class="container">
+                <!-- Stat cards (labels filled by JS per role) -->
                 <div class="dash-stats">
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-users"></i></div><div><div class="ds-num" id="statTotal">0</div><div class="ds-label">Total Agents</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-user-check"></i></div><div><div class="ds-num" id="statActive">0</div><div class="ds-label">Active</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-user-clock"></i></div><div><div class="ds-num" id="statPending">0</div><div class="ds-label">Pending</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-user-shield"></i></div><div><div class="ds-num" id="statAdmins">0</div><div class="ds-label">Admins</div></div></div>
+                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-layer-group"></i></div><div><div class="ds-num" id="stat1">0</div><div class="ds-label" id="lbl1">—</div></div></div>
+                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-chair"></i></div><div><div class="ds-num" id="stat2">0</div><div class="ds-label" id="lbl2">—</div></div></div>
+                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-bell"></i></div><div><div class="ds-num" id="stat3">0</div><div class="ds-label" id="lbl3">—</div></div></div>
+                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-circle-check"></i></div><div><div class="ds-num" id="stat4">0</div><div class="ds-label" id="lbl4">—</div></div></div>
                 </div>
 
-                <!-- Admin only -->
-                <div class="panel" id="adminPanel" style="display:none">
+                <!-- Tabs -->
+                <div class="dash-tabs" id="dashTabs">
+                    <button class="dash-tab" data-tab="panelGroups" data-for="admin"><i class="fas fa-layer-group"></i> Groups</button>
+                    <button class="dash-tab" data-tab="panelReservations" data-for="admin"><i class="fas fa-bell"></i> Reservations <span class="tab-dot" id="pendingDot" style="display:none"></span></button>
+                    <button class="dash-tab" data-tab="panelAgents" data-for="admin"><i class="fas fa-user-group"></i> Agents</button>
+                    <button class="dash-tab" data-tab="panelAvailable" data-for="agent"><i class="fas fa-plane-departure"></i> Available Groups</button>
+                    <button class="dash-tab" data-tab="panelMyRes" data-for="agent"><i class="fas fa-ticket"></i> My Bookings</button>
+                </div>
+
+                <!-- ===== ADMIN: GROUPS ===== -->
+                <div class="panel tab-panel" id="panelGroups" style="display:none">
+                    <div class="panel-head">
+                        <h2><i class="fas fa-layer-group"></i> Flight Groups</h2>
+                        <button class="btn-primary" id="addGroupBtn"><i class="fas fa-plus"></i> Add Group</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table class="agents-table">
+                            <thead>
+                                <tr><th>Route</th><th>Airline</th><th>Date</th><th>Price</th><th>Seats</th><th style="text-align:right">Actions</th></tr>
+                            </thead>
+                            <tbody id="groupsTableBody">
+                                <tr><td colspan="6" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading groups...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- ===== ADMIN: RESERVATIONS ===== -->
+                <div class="panel tab-panel" id="panelReservations" style="display:none">
+                    <div class="panel-head"><h2><i class="fas fa-bell"></i> Reservations</h2></div>
+                    <div id="reservationsList" class="card-grid">
+                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+
+                <!-- ===== ADMIN: AGENTS ===== -->
+                <div class="panel tab-panel" id="panelAgents" style="display:none">
                     <div class="panel-head">
                         <h2><i class="fas fa-user-group"></i> Manage Agents</h2>
                         <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
@@ -203,10 +239,20 @@
                     </div>
                 </div>
 
-                <!-- Non-admin -->
-                <div class="panel" id="agentPanel" style="display:none">
-                    <div class="panel-head"><h2><i class="fas fa-id-badge"></i> My Profile</h2></div>
-                    <p style="color:var(--gray)">You are logged in as an agent. Contact your admin for management access.</p>
+                <!-- ===== AGENT: AVAILABLE GROUPS ===== -->
+                <div class="panel tab-panel" id="panelAvailable" style="display:none">
+                    <div class="panel-head"><h2><i class="fas fa-plane-departure"></i> Available Groups</h2></div>
+                    <div id="availableGroupsList" class="card-grid">
+                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
+                </div>
+
+                <!-- ===== AGENT: MY BOOKINGS ===== -->
+                <div class="panel tab-panel" id="panelMyRes" style="display:none">
+                    <div class="panel-head"><h2><i class="fas fa-ticket"></i> My Bookings</h2></div>
+                    <div id="myResList" class="card-grid">
+                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
+                    </div>
                 </div>
             </div>
             <div style="height:60px"></div>
