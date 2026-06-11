@@ -1,415 +1,263 @@
-/* ============================================
-   THAI AIRWAYS - MAIN JAVASCRIPT
-   ============================================ */
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Al Saudia Travel | Agent Login Portal</title>
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ========== PRELOADER ==========
-    const preloader = document.querySelector('.preloader');
-    if (preloader) {
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                preloader.classList.add('fade-out');
-                setTimeout(() => {
-                    preloader.style.display = 'none';
-                }, 500);
-            }, 1500);
-        });
-    }
-    
-    // ========== INITIALIZE AOS ==========
-    AOS.init({
-        duration: 1000,
-        once: true,
-        offset: 100,
-        disable: window.innerWidth < 768
-    });
-    
-    // ========== MOBILE MENU TOGGLE ==========
-    const mobileToggle = document.getElementById('mobileToggle');
-    const mainNav = document.getElementById('mainNav');
-    
-    if (mobileToggle && mainNav) {
-        mobileToggle.addEventListener('click', function() {
-            mainNav.classList.toggle('active');
-            const icon = mobileToggle.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-bars');
-                icon.classList.toggle('fa-times');
-            }
-        });
-    }
-    
-    // ========== DROPDOWN FOR MOBILE ==========
-    const dropdowns = document.querySelectorAll('.dropdown');
-    dropdowns.forEach(dropdown => {
-        const link = dropdown.querySelector('a');
-        if (link) {
-            link.addEventListener('click', function(e) {
-                if (window.innerWidth <= 992) {
-                    e.preventDefault();
-                    dropdown.classList.toggle('active');
-                }
-            });
-        }
-    });
-    
-    // ========== PASSWORD TOGGLE ==========
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('password');
-    
-    if (togglePassword && passwordField) {
-        togglePassword.addEventListener('click', function() {
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-            const icon = togglePassword.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-eye-slash');
-                icon.classList.toggle('fa-eye');
-            }
-        });
-    }
-    
-    // ========== COPY DEMO CREDENTIALS ==========
-    const copyButtons = document.querySelectorAll('.copy-demo');
-    copyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const textToCopy = this.getAttribute('data-copy');
-            if (textToCopy) {
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    showAlert('✓ Copied to clipboard!', 'success', 1500);
-                    const originalIcon = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        this.innerHTML = originalIcon;
-                    }, 1000);
-                }).catch(() => {
-                    showAlert('Failed to copy', 'error');
-                });
-            }
-        });
-    });
-    
-    // ========== ALERT FUNCTION ==========
-    function showAlert(message, type = 'info', duration = 3000) {
-        const alertContainer = document.getElementById('alertContainer');
-        if (!alertContainer) return;
-        
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        
-        const icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
-        alertDiv.innerHTML = `${icon} ${message}`;
-        alertContainer.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.style.opacity = '0';
-            alertDiv.style.transition = 'opacity 0.3s ease';
-            setTimeout(() => alertDiv.remove(), 300);
-        }, duration);
-    }
-    
-    // ========== EMAIL VALIDATION ==========
-    function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-    
-    // ========== LOGIN FORM HANDLER ==========
-    const loginForm = document.getElementById('loginForm');
-    const loginSubmit = document.getElementById('loginSubmit');
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe')?.checked || false;
-            
-            // Validation
-            if (!email || !password) {
-                showAlert('Please enter both email and password', 'error');
-                return;
-            }
-            
-            if (!isValidEmail(email)) {
-                showAlert('Please enter a valid email address', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showAlert('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
-            if (loginSubmit) {
-                loginSubmit.disabled = true;
-                const originalText = loginSubmit.querySelector('span').textContent;
-                loginSubmit.querySelector('span').textContent = 'Logging in...';
-                
-                // Demo login - Replace with actual authentication
-                setTimeout(() => {
-                    if ((email === 'agent@thaiairways.com' || email === 'demo@thaiairways.com') && password === '12345678') {
-                        showAlert('✓ Login successful! Welcome to Thai Airways Agent Portal.', 'success');
-                        
-                        if (rememberMe) {
-                            localStorage.setItem('thai_remembered_user', email);
-                        }
-                        
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Welcome Aboard!',
-                            text: 'Redirecting to your dashboard...',
-                            timer: 2000,
-                            showConfirmButton: false,
-                            background: '#fff',
-                            customClass: {
-                                popup: 'thai-swal-popup'
-                            }
-                        });
-                        
-                        setTimeout(() => {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Thai Airways Agent Portal',
-                                html: '<strong>Demo Mode</strong><br>Connect Firebase or backend API for full functionality.',
-                                confirmButtonColor: '#4B2E8B',
-                                confirmButtonText: 'Got it'
-                            });
-                        }, 2000);
-                    } else {
-                        showAlert('Invalid credentials. Use: agent@thaiairways.com / 12345678', 'error');
-                    }
-                    
-                    loginSubmit.disabled = false;
-                    loginSubmit.querySelector('span').textContent = originalText;
-                }, 1500);
-            }
-        });
-    }
-    
-    // ========== REMEMBER ME FUNCTIONALITY ==========
-    const rememberedUser = localStorage.getItem('thai_remembered_user');
-    if (rememberedUser) {
-        const emailInput = document.getElementById('email');
-        const rememberCheckbox = document.getElementById('rememberMe');
-        if (emailInput) emailInput.value = rememberedUser;
-        if (rememberCheckbox) rememberCheckbox.checked = true;
-    }
-    
-    // ========== FORGOT PASSWORD HANDLER ==========
-    const forgotPassword = document.getElementById('forgotPassword');
-    if (forgotPassword) {
-        forgotPassword.addEventListener('click', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Reset Password',
-                text: 'Enter your registered email address',
-                input: 'email',
-                inputPlaceholder: 'agent@thaiairways.com',
-                showCancelButton: true,
-                confirmButtonColor: '#4B2E8B',
-                confirmButtonText: 'Send Reset Link',
-                cancelButtonText: 'Cancel',
-                preConfirm: (email) => {
-                    if (!email || !isValidEmail(email)) {
-                        Swal.showValidationMessage('Please enter a valid email address');
-                    }
-                    return email;
-                }
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Reset Link Sent!',
-                        text: `Password reset instructions sent to ${result.value}`,
-                        confirmButtonColor: '#4B2E8B'
-                    });
-                }
-            });
-        });
-    }
-    
-    // ========== REGISTER HANDLER ==========
-    function handleRegistration() {
-        Swal.fire({
-            title: 'Register as Travel Agent',
-            html: `
-                <style>
-                    .thai-reg-input {
-                        width: 100%;
-                        padding: 10px 12px;
-                        margin: 8px 0;
-                        border: 2px solid #E5E7EB;
-                        border-radius: 10px;
-                        font-family: inherit;
-                        font-size: 14px;
-                    }
-                    .thai-reg-input:focus {
-                        outline: none;
-                        border-color: #4B2E8B;
-                    }
-                </style>
-                <input type="text" id="regFullName" class="thai-reg-input" placeholder="Full Name">
-                <input type="email" id="regEmail" class="thai-reg-input" placeholder="Email Address">
-                <input type="tel" id="regPhone" class="thai-reg-input" placeholder="Phone Number">
-                <input type="text" id="regAgency" class="thai-reg-input" placeholder="Agency Name">
-                <input type="password" id="regPassword" class="thai-reg-input" placeholder="Password (min 8 chars)">
-                <input type="password" id="regConfirmPassword" class="thai-reg-input" placeholder="Confirm Password">
-            `,
-            width: '500px',
-            confirmButtonText: 'Submit Registration',
-            confirmButtonColor: '#4B2E8B',
-            showCancelButton: true,
-            cancelButtonText: 'Cancel',
-            preConfirm: () => {
-                const name = document.getElementById('regFullName')?.value;
-                const email = document.getElementById('regEmail')?.value;
-                const phone = document.getElementById('regPhone')?.value;
-                const agency = document.getElementById('regAgency')?.value;
-                const password = document.getElementById('regPassword')?.value;
-                const confirmPassword = document.getElementById('regConfirmPassword')?.value;
-                
-                if (!name || !email || !phone || !agency || !password) {
-                    Swal.showValidationMessage('Please fill all fields');
-                    return false;
-                }
-                if (!isValidEmail(email)) {
-                    Swal.showValidationMessage('Please enter a valid email address');
-                    return false;
-                }
-                if (password.length < 8) {
-                    Swal.showValidationMessage('Password must be at least 8 characters');
-                    return false;
-                }
-                if (password !== confirmPassword) {
-                    Swal.showValidationMessage('Passwords do not match');
-                    return false;
-                }
-                return { name, email, phone, agency, password };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Registration Submitted!',
-                    text: `Thank you ${result.value.name}. Our team will review and contact you soon.`,
-                    confirmButtonColor: '#4B2E8B'
-                });
-                // Reset form
-                document.getElementById('loginForm')?.reset();
-            }
-        });
-    }
-    
-    const registerBtn = document.getElementById('registerBtn');
-    const registerNowBtn = document.getElementById('registerNowBtn');
-    
-    if (registerBtn) {
-        registerBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleRegistration();
-        });
-    }
-    
-    if (registerNowBtn) {
-        registerNowBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            handleRegistration();
-        });
-    }
-    
-    // ========== AIRLINE PARTNERS MARQUEE ==========
-    const starAllianceMembers = [
-        { name: 'Thai Airways', icon: 'fas fa-plane', color: '#4B2E8B' },
-        { name: 'Singapore Airlines', icon: 'fas fa-plane', color: '#E31837' },
-        { name: 'ANA', icon: 'fas fa-plane', color: '#0055A4' },
-        { name: 'Lufthansa', icon: 'fas fa-plane', color: '#0066CC' },
-        { name: 'United Airlines', icon: 'fas fa-plane', color: '#005A9C' },
-        { name: 'Air Canada', icon: 'fas fa-plane', color: '#C8102E' },
-        { name: 'Asiana Airlines', icon: 'fas fa-plane', color: '#003366' },
-        { name: 'EVA Air', icon: 'fas fa-plane', color: '#6FB7B7' }
-    ];
-    
-    const marqueeTrack = document.getElementById('marqueeTrack');
-    if (marqueeTrack) {
-        let html = '';
-        [...starAllianceMembers, ...starAllianceMembers].forEach(member => {
-            html += `
-                <div class="partner">
-                    <i class="${member.icon}" style="color: ${member.color}"></i>
-                    <span>${member.name}</span>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- AOS Animation -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- Preloader -->
+    <div class="preloader">
+        <div class="loader">
+            <div class="plane-icon"><i class="fas fa-plane"></i></div>
+            <div class="loader-text">Al Saudia Travel</div>
+        </div>
+    </div>
+
+    <div class="page-wrapper">
+
+        <!-- Header -->
+        <header class="main-header">
+            <div class="container">
+                <div class="header-inner">
+                    <div class="logo" data-aos="fade-right" data-aos-duration="800">
+                        <a href="#">
+                            <div class="logo-icon"><i class="fas fa-plane-circle-check"></i></div>
+                            <div class="logo-text">
+                                <span class="logo-main">AL SAUDIA</span>
+                                <span class="logo-sub">TRAVEL AGENCY</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <nav class="main-nav" id="mainNav">
+                        <ul class="nav-menu">
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#about">About Us</a></li>
+                            <li><a href="#umrah">Umrah Packages</a></li>
+                            <li class="dropdown">
+                                <a href="#">Services <i class="fas fa-chevron-down"></i></a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#"><i class="fas fa-ticket-alt"></i> Air Tickets</a></li>
+                                    <li><a href="#"><i class="fas fa-mosque"></i> Umrah Packages</a></li>
+                                    <li><a href="#"><i class="fas fa-hotel"></i> Hotel Bookings</a></li>
+                                    <li><a href="#"><i class="fas fa-passport"></i> Visa Assistance</a></li>
+                                    <li><a href="#"><i class="fas fa-umbrella-beach"></i> Tour Packages</a></li>
+                                    <li><a href="#"><i class="fas fa-shield-heart"></i> Travel Insurance</a></li>
+                                </ul>
+                            </li>
+                            <li><a href="#groups">Group Bookings</a></li>
+                            <li><a href="#contact">Contact Us</a></li>
+                        </ul>
+                    </nav>
+
+                    <div class="header-btns" data-aos="fade-left" data-aos-duration="800">
+                        <a href="#" class="btn-register" id="registerBtn"><i class="fas fa-user-plus"></i> Register</a>
+                        <a href="#" class="btn-login-header active"><i class="fas fa-lock"></i> Login</a>
+                        <button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
+                    </div>
                 </div>
-            `;
-        });
-        marqueeTrack.innerHTML = html;
-    }
-    
-    // ========== SMOOTH SCROLL ==========
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href !== '#' && href !== '#home') {
-                const target = document.querySelector(href);
-                if (target) {
-                    e.preventDefault();
-                    target.scrollIntoView({ behavior: 'smooth' });
-                    
-                    // Close mobile menu
-                    if (mainNav && mainNav.classList.contains('active')) {
-                        mainNav.classList.remove('active');
-                        if (mobileToggle) {
-                            const icon = mobileToggle.querySelector('i');
-                            if (icon) {
-                                icon.classList.add('fa-bars');
-                                icon.classList.remove('fa-times');
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    });
-    
-    // ========== HEADER SCROLL EFFECT ==========
-    const header = document.querySelector('.main-header');
-    window.addEventListener('scroll', () => {
-        if (header) {
-            if (window.scrollY > 50) {
-                header.style.boxShadow = '0 5px 20px rgba(0,0,0,0.1)';
-                header.style.padding = '10px 0';
-            } else {
-                header.style.boxShadow = '0 2px 8px rgba(0,0,0,0.08)';
-                header.style.padding = '12px 0';
-            }
-        }
-    });
-    
-    // ========== FORM INPUT ANIMATIONS ==========
-    const inputs = document.querySelectorAll('.thai-input');
-    inputs.forEach(input => {
-        input.addEventListener('focus', function() {
-            this.parentElement.classList.add('focused');
-        });
-        input.addEventListener('blur', function() {
-            if (!this.value) {
-                this.parentElement.classList.remove('focused');
-            }
-        });
-    });
-    
-    console.log('Thai Airways Agent Portal Loaded Successfully');
-});
+            </div>
+        </header>
 
-// ========== FIREBASE CONFIGURATION (Add Later) ==========
-/*
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-// firebase.initializeApp(firebaseConfig);
-*/
+        <!-- Login Hero -->
+        <section class="login-hero" id="home">
+            <div class="container">
+                <div class="login-container">
+
+                    <!-- Left: Brand -->
+                    <div class="brand-side" data-aos="fade-right" data-aos-duration="1000">
+                        <div class="brand-content">
+                            <div class="welcome-badge">
+                                <i class="fas fa-crown"></i>
+                                <span>Premium Travel Partner Since 2015</span>
+                            </div>
+                            <h1 class="brand-title">Welcome Back,<br><span class="highlight">Travel Agent</span></h1>
+                            <p class="brand-description">
+                                Access exclusive group flight rates, manage your Umrah bookings,
+                                and get real-time updates on airline deals - all in one place.
+                            </p>
+                            <div class="stats-container">
+                                <div class="stat-item"><div class="stat-number">5000+</div><div class="stat-label">Happy Travelers</div></div>
+                                <div class="stat-item"><div class="stat-number">50+</div><div class="stat-label">Partner Agents</div></div>
+                                <div class="stat-item"><div class="stat-number">15+</div><div class="stat-label">Airlines Partners</div></div>
+                            </div>
+                            <div class="feature-grid">
+                                <div class="feature-card">
+                                    <div class="feature-icon"><i class="fas fa-tags"></i></div>
+                                    <div class="feature-info"><h4>Best Group Rates</h4><p>Negotiated prices for Umrah &amp; Hajj groups</p></div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon"><i class="fas fa-clock"></i></div>
+                                    <div class="feature-info"><h4>24/7 Support</h4><p>Dedicated team for agents</p></div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon"><i class="fas fa-chart-simple"></i></div>
+                                    <div class="feature-info"><h4>Real-time Updates</h4><p>Live flight &amp; visa status</p></div>
+                                </div>
+                                <div class="feature-card">
+                                    <div class="feature-icon"><i class="fas fa-shield"></i></div>
+                                    <div class="feature-info"><h4>Secure Platform</h4><p>100% encrypted data</p></div>
+                                </div>
+                            </div>
+                            <div class="trust-section">
+                                <div class="trust-badge">
+                                    <i class="fas fa-shield-heart"></i>
+                                    <span>IATA Certified | Licensed by Ministry of Tourism</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Login Form -->
+                    <div class="form-side" data-aos="fade-left" data-aos-duration="1000">
+                        <div class="form-container">
+                            <div class="form-header">
+                                <div class="form-icon"><i class="fas fa-user-circle"></i></div>
+                                <h2>Agent Login</h2>
+                                <p>Sign in to access your dashboard</p>
+                            </div>
+
+                            <div id="alertContainer" class="alert-container"></div>
+
+                            <form id="loginForm">
+                                <div class="input-group">
+                                    <div class="input-icon"><i class="fas fa-envelope"></i></div>
+                                    <div class="input-field">
+                                        <label>Email Address</label>
+                                        <input type="email" id="email" class="form-input" placeholder="agent@alsaudiatravel.com" autocomplete="off" required>
+                                    </div>
+                                </div>
+
+                                <div class="input-group">
+                                    <div class="input-icon"><i class="fas fa-lock"></i></div>
+                                    <div class="input-field">
+                                        <label>Password</label>
+                                        <div class="password-container">
+                                            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
+                                            <button type="button" class="toggle-password" id="togglePassword"><i class="fas fa-eye-slash"></i></button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-options">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" id="rememberMe">
+                                        <span class="checkmark"></span>
+                                        Remember me
+                                    </label>
+                                    <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
+                                </div>
+
+                                <button type="submit" class="login-btn" id="loginBtn">
+                                    <span class="btn-text">Login to Dashboard</span>
+                                    <span class="btn-icon"><i class="fas fa-arrow-right"></i></span>
+                                </button>
+
+                                <div class="divider"><span>Don't have an account?</span></div>
+
+                                <div class="register-prompt">
+                                    <a href="#" class="register-now" id="registerNow"><i class="fas fa-user-plus"></i> Create New Account</a>
+                                </div>
+                            </form>
+
+                            <!-- Info note (replaces old demo credentials) -->
+                            <div class="demo-credentials">
+                                <p class="demo-title"><i class="fas fa-info-circle"></i> Account Access</p>
+                                <div class="demo-cards">
+                                    <div class="demo-card" style="flex-basis:100%">
+                                        <span class="demo-label">Note:</span>
+                                        <span class="demo-value" style="font-family:inherit">Accounts are created by your admin. New requests need admin approval.</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Airline Partners -->
+                <div class="partners-section" data-aos="fade-up" data-aos-duration="1000">
+                    <h3 class="partners-title"><i class="fas fa-handshake"></i> Our Valued Airline Partners</h3>
+                    <div class="partners-marquee"><div class="marquee-content" id="marqueeContent"></div></div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="container">
+                <div class="footer-grid">
+                    <div class="footer-about">
+                        <div class="footer-logo">
+                            <i class="fas fa-plane-circle-check"></i>
+                            <div><span class="footer-logo-main">AL SAUDIA</span><span class="footer-logo-sub">TRAVEL AGENCY</span></div>
+                        </div>
+                        <p>Your trusted partner for Umrah, Hajj, and group travel arrangements since 2015.</p>
+                        <div class="social-links">
+                            <a href="#"><i class="fab fa-facebook-f"></i></a>
+                            <a href="#"><i class="fab fa-instagram"></i></a>
+                            <a href="#"><i class="fab fa-whatsapp"></i></a>
+                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                        </div>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Quick Links</h4>
+                        <ul>
+                            <li><a href="#home">Home</a></li>
+                            <li><a href="#about">About Us</a></li>
+                            <li><a href="#umrah">Umrah Packages</a></li>
+                            <li><a href="#groups">Group Bookings</a></li>
+                            <li><a href="#contact">Contact Us</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-links">
+                        <h4>Services</h4>
+                        <ul>
+                            <li><a href="#">Air Ticketing</a></li>
+                            <li><a href="#">Umrah Packages</a></li>
+                            <li><a href="#">Hotel Reservations</a></li>
+                            <li><a href="#">Visa Services</a></li>
+                            <li><a href="#">Travel Insurance</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-contact">
+                        <h4>Get In Touch</h4>
+                        <ul>
+                            <li><i class="fas fa-phone-alt"></i> <a href="tel:+923009876543">+92 300 9876543</a></li>
+                            <li><i class="fas fa-envelope"></i> <a href="mailto:info@alsaudiatravel.com">info@alsaudiatravel.com</a></li>
+                            <li><i class="fas fa-location-dot"></i> Makkah Tower, Near Haram, Saudi Arabia</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="footer-bottom">
+                    <p>&copy; 2024 Al Saudia Travel Agency. All Rights Reserved.</p>
+                    <div class="footer-bottom-links">
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms &amp; Conditions</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <!-- app.js is a MODULE because it uses Firebase imports -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
