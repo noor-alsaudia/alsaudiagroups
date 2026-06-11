@@ -1,328 +1,1157 @@
 /* ============================================
-   AL SAUDIA TRAVEL AGENCY - MAIN JAVASCRIPT
+   AL SAUDIA TRAVEL AGENCY - MAIN STYLES
    ============================================ */
 
-document.addEventListener('DOMContentLoaded', function() {
-    
-    // ========== PRELOADER ==========
-    const preloader = document.querySelector('.preloader');
-    if (preloader) {
-        window.addEventListener('load', function() {
-            setTimeout(() => {
-                preloader.classList.add('fade-out');
-                setTimeout(() => {
-                    preloader.style.display = 'none';
-                }, 500);
-            }, 1000);
-        });
-    }
-    
-    // ========== INITIALIZE AOS ==========
-    AOS.init({
-        duration: 1000,
-        once: true,
-        offset: 100
-    });
-    
-    // ========== MOBILE MENU TOGGLE ==========
-    const mobileToggle = document.getElementById('mobileToggle');
-    const mainNav = document.getElementById('mainNav');
-    
-    if (mobileToggle && mainNav) {
-        mobileToggle.addEventListener('click', function() {
-            mainNav.classList.toggle('active');
-            const icon = mobileToggle.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-bars');
-                icon.classList.toggle('fa-times');
-            }
-        });
-    }
-    
-    // ========== DROPDOWN FOR MOBILE ==========
-    const dropdowns = document.querySelectorAll('.dropdown');
-    dropdowns.forEach(dropdown => {
-        const link = dropdown.querySelector('a');
-        if (link) {
-            link.addEventListener('click', function(e) {
-                if (window.innerWidth <= 992) {
-                    e.preventDefault();
-                    dropdown.classList.toggle('active');
-                }
-            });
-        }
-    });
-    
-    // ========== PASSWORD TOGGLE ==========
-    const togglePassword = document.getElementById('togglePassword');
-    const passwordField = document.getElementById('password');
-    
-    if (togglePassword && passwordField) {
-        togglePassword.addEventListener('click', function() {
-            const type = passwordField.getAttribute('type') === 'password' ? 'text' : 'password';
-            passwordField.setAttribute('type', type);
-            const icon = togglePassword.querySelector('i');
-            if (icon) {
-                icon.classList.toggle('fa-eye-slash');
-                icon.classList.toggle('fa-eye');
-            }
-        });
-    }
-    
-    // ========== COPY DEMO CREDENTIALS ==========
-    const copyButtons = document.querySelectorAll('.copy-btn');
-    copyButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const textToCopy = this.getAttribute('data-copy');
-            if (textToCopy) {
-                navigator.clipboard.writeText(textToCopy).then(() => {
-                    showAlert('✓ Copied to clipboard!', 'success', 1500);
-                    const originalIcon = this.innerHTML;
-                    this.innerHTML = '<i class="fas fa-check"></i>';
-                    setTimeout(() => {
-                        this.innerHTML = originalIcon;
-                    }, 1000);
-                }).catch(() => {
-                    showAlert('Failed to copy', 'error');
-                });
-            }
-        });
-    });
-    
-    // ========== ALERT FUNCTION ==========
-    function showAlert(message, type = 'info', duration = 3000) {
-        const alertContainer = document.getElementById('alertContainer');
-        if (!alertContainer) return;
-        
-        const alertDiv = document.createElement('div');
-        alertDiv.className = `alert alert-${type}`;
-        
-        let icon = type === 'success' ? '<i class="fas fa-check-circle"></i>' : '<i class="fas fa-exclamation-circle"></i>';
-        alertDiv.innerHTML = `${icon} ${message}`;
-        alertContainer.appendChild(alertDiv);
-        
-        setTimeout(() => {
-            alertDiv.style.opacity = '0';
-            setTimeout(() => alertDiv.remove(), 300);
-        }, duration);
-    }
-    
-    // ========== EMAIL VALIDATION ==========
-    function isValidEmail(email) {
-        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-    
-    // ========== LOGIN FORM HANDLER ==========
-    const loginForm = document.getElementById('loginForm');
-    const loginBtn = document.getElementById('loginBtn');
-    
-    if (loginForm) {
-        loginForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const email = document.getElementById('email').value.trim();
-            const password = document.getElementById('password').value;
-            const rememberMe = document.getElementById('rememberMe')?.checked || false;
-            
-            if (!email || !password) {
-                showAlert('Please enter both email and password', 'error');
-                return;
-            }
-            
-            if (!isValidEmail(email)) {
-                showAlert('Please enter a valid email address', 'error');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showAlert('Password must be at least 6 characters', 'error');
-                return;
-            }
-            
-            if (loginBtn) {
-                loginBtn.disabled = true;
-                const btnText = loginBtn.querySelector('.btn-text');
-                const originalText = btnText ? btnText.textContent : 'Login';
-                if (btnText) btnText.textContent = 'Logging in...';
-                
-                // Demo login - Replace with Firebase auth later
-                setTimeout(() => {
-                    if ((email === 'agent@alsaudia.com' || email === 'demo@alsaudia.com') && password === '12345678') {
-                        showAlert('Login successful! Welcome to Al Saudia Travel Dashboard.', 'success');
-                        if (rememberMe) localStorage.setItem('rememberedUser', email);
-                        
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Welcome Back!',
-                            text: 'Redirecting to dashboard...',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                        
-                        setTimeout(() => {
-                            Swal.fire({
-                                icon: 'info',
-                                title: 'Dashboard Demo',
-                                html: 'This is a demo login. <br>Connect Firebase for full functionality.',
-                                confirmButtonColor: '#0a5c7e'
-                            });
-                        }, 2000);
-                    } else {
-                        showAlert('Invalid credentials. Use agent@alsaudia.com / 12345678', 'error');
-                    }
-                    
-                    loginBtn.disabled = false;
-                    if (btnText) btnText.textContent = originalText;
-                }, 1500);
-            }
-        });
-    }
-    
-    // ========== REMEMBER ME ==========
-    const rememberedEmail = localStorage.getItem('rememberedUser');
-    if (rememberedEmail) {
-        const emailInput = document.getElementById('email');
-        const rememberCheckbox = document.getElementById('rememberMe');
-        if (emailInput) emailInput.value = rememberedEmail;
-        if (rememberCheckbox) rememberCheckbox.checked = true;
-    }
-    
-    // ========== FORGOT PASSWORD ==========
-    const forgotPassword = document.getElementById('forgotPassword');
-    if (forgotPassword) {
-        forgotPassword.addEventListener('click', function(e) {
-            e.preventDefault();
-            Swal.fire({
-                title: 'Reset Password',
-                text: 'Enter your email address to receive reset link',
-                input: 'email',
-                inputPlaceholder: 'agent@alsaudia.com',
-                showCancelButton: true,
-                confirmButtonColor: '#0a5c7e',
-                confirmButtonText: 'Send Reset Link',
-                cancelButtonText: 'Cancel'
-            }).then((result) => {
-                if (result.isConfirmed && result.value) {
-                    if (result.value.includes('@')) {
-                        Swal.fire('Email Sent!', 'Password reset link has been sent to ' + result.value, 'success');
-                    } else {
-                        Swal.fire('Error!', 'Please enter a valid email address', 'error');
-                    }
-                }
-            });
-        });
-    }
-    
-    // ========== REGISTER HANDLER ==========
-    function handleRegister() {
-        Swal.fire({
-            title: 'Create Agent Account',
-            html: `
-                <input type="text" id="regName" class="swal2-input" placeholder="Full Name">
-                <input type="email" id="regEmail" class="swal2-input" placeholder="Email Address">
-                <input type="tel" id="regPhone" class="swal2-input" placeholder="Phone Number">
-                <input type="password" id="regPassword" class="swal2-input" placeholder="Password (min 8 chars)">
-            `,
-            confirmButtonText: 'Register',
-            confirmButtonColor: '#0a5c7e',
-            showCancelButton: true,
-            cancelButtonText: 'Cancel',
-            preConfirm: () => {
-                const name = document.getElementById('regName')?.value;
-                const email = document.getElementById('regEmail')?.value;
-                const phone = document.getElementById('regPhone')?.value;
-                const password = document.getElementById('regPassword')?.value;
-                
-                if (!name || !email || !phone || !password) {
-                    Swal.showValidationMessage('Please fill all fields');
-                    return false;
-                }
-                if (!isValidEmail(email)) {
-                    Swal.showValidationMessage('Please enter valid email');
-                    return false;
-                }
-                if (password.length < 8) {
-                    Swal.showValidationMessage('Password must be at least 8 characters');
-                    return false;
-                }
-                return { name, email, phone, password };
-            }
-        }).then((result) => {
-            if (result.isConfirmed) {
-                Swal.fire('Registration Submitted!', 'Our team will contact you soon.', 'success');
-            }
-        });
-    }
-    
-    const registerBtn = document.getElementById('registerBtn');
-    const registerNow = document.getElementById('registerNow');
-    
-    if (registerBtn) registerBtn.addEventListener('click', (e) => { e.preventDefault(); handleRegister(); });
-    if (registerNow) registerNow.addEventListener('click', (e) => { e.preventDefault(); handleRegister(); });
-    
-    // ========== AIRLINE MARQUEE ==========
-    const airlines = [
-        { name: 'Saudia Airlines', icon: 'fas fa-plane', color: '#0a5c7e' },
-        { name: 'Emirates', icon: 'fas fa-plane', color: '#d4a53a' },
-        { name: 'Qatar Airways', icon: 'fas fa-plane', color: '#8B1E3F' },
-        { name: 'Etihad Airways', icon: 'fas fa-plane', color: '#2B5B2B' },
-        { name: 'Turkish Airlines', icon: 'fas fa-plane', color: '#E30A17' },
-        { name: 'Fly Dubai', icon: 'fas fa-plane', color: '#FF6600' },
-        { name: 'Air Arabia', icon: 'fas fa-plane', color: '#003366' },
-        { name: 'Gulf Air', icon: 'fas fa-plane', color: '#C00000' }
-    ];
-    
-    const marqueeContent = document.getElementById('marqueeContent');
-    if (marqueeContent) {
-        let html = '';
-        [...airlines, ...airlines].forEach(airline => {
-            html += `<div class="partner-item"><i class="${airline.icon}" style="color: ${airline.color}"></i><span>${airline.name}</span></div>`;
-        });
-        marqueeContent.innerHTML = html;
-    }
-    
-    // ========== SMOOTH SCROLL ==========
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function(e) {
-            const href = this.getAttribute('href');
-            if (href !== '#' && href !== '#home') {
-                const target = document.querySelector(href);
-                if (target) {
-                    e.preventDefault();
-                    target.scrollIntoView({ behavior: 'smooth' });
-                    if (mainNav?.classList.contains('active')) {
-                        mainNav.classList.remove('active');
-                        if (mobileToggle) {
-                            const icon = mobileToggle.querySelector('i');
-                            if (icon) icon.classList.add('fa-bars');
-                            if (icon) icon.classList.remove('fa-times');
-                        }
-                    }
-                }
-            }
-        });
-    });
-    
-    // ========== HEADER SCROLL EFFECT ==========
-    const header = document.querySelector('.main-header');
-    window.addEventListener('scroll', () => {
-        if (header) {
-            header.style.boxShadow = window.scrollY > 50 ? '0 10px 30px rgba(0,0,0,0.1)' : '0 4px 20px rgba(0,0,0,0.08)';
-        }
-    });
-    
-    console.log('Al Saudia Travel Agency Portal Loaded Successfully!');
-});
+:root {
+    --primary: #0a5c7e;
+    --primary-dark: #064259;
+    --primary-light: #1a7b9e;
+    --secondary: #d4a53a;
+    --secondary-dark: #b8891f;
+    --accent: #e6701a;
+    --dark: #0f1a24;
+    --gray-dark: #2d3a45;
+    --gray: #6c7a8a;
+    --gray-light: #eef2f5;
+    --white: #ffffff;
+    --success: #10b981;
+    --error: #ef4444;
+    --warning: #f59e0b;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 15px 35px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+    --transition: all 0.3s ease;
+}
 
-// ========== FIREBASE CONFIG (Add Later) ==========
-/*
-const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-    appId: "YOUR_APP_ID"
-};
-// firebase.initializeApp(firebaseConfig);
-*/
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Outfit', sans-serif;
+    background: var(--gray-light);
+    color: var(--dark);
+    overflow-x: hidden;
+    line-height: 1.5;
+}
+
+/* ========== PRELOADER ========== */
+.preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.5s ease, visibility 0.5s ease;
+}
+
+.preloader.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+.loader {
+    text-align: center;
+}
+
+.plane-icon {
+    font-size: 60px;
+    color: var(--secondary);
+    animation: flyPlane 1.2s ease-in-out infinite;
+}
+
+.loader-text {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: 3px;
+}
+
+@keyframes flyPlane {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-15px); }
+}
+
+/* ========== CONTAINER ========== */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 30px;
+}
+
+/* ========== HEADER ========== */
+.main-header {
+    background: var(--white);
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    padding: 15px 0;
+}
+
+.header-inner {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* Logo */
+.logo a {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+}
+
+.logo-icon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: var(--secondary);
+}
+
+.logo-main {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--primary);
+    letter-spacing: 1px;
+}
+
+.logo-sub {
+    font-size: 9px;
+    font-weight: 500;
+    color: var(--gray);
+    letter-spacing: 2px;
+    display: block;
+}
+
+/* Navigation */
+.main-nav {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+.nav-menu {
+    display: flex;
+    list-style: none;
+    gap: 30px;
+}
+
+.nav-menu li a {
+    text-decoration: none;
+    color: var(--dark);
+    font-weight: 500;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.nav-menu li a:hover {
+    color: var(--primary);
+}
+
+/* Dropdown */
+.dropdown {
+    position: relative;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--white);
+    min-width: 230px;
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow-lg);
+    list-style: none;
+    padding: 10px 0;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-10px);
+    transition: var(--transition);
+    z-index: 100;
+}
+
+.dropdown:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dropdown-menu li a:hover {
+    background: var(--gray-light);
+    padding-left: 25px;
+}
+
+/* Header Buttons */
+.header-btns {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-register, .btn-login-header {
+    padding: 10px 24px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-register {
+    background: transparent;
+    border: 2px solid var(--primary);
+    color: var(--primary);
+}
+
+.btn-register:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-login-header {
+    background: var(--primary);
+    color: var(--white);
+}
+
+.btn-login-header:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+}
+
+.btn-login-header.active {
+    background: var(--secondary);
+}
+
+.mobile-toggle {
+    display: none;
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--primary);
+}
+
+/* ========== LOGIN HERO ========== */
+.login-hero {
+    min-height: calc(100vh - 85px);
+    background: linear-gradient(135deg, #e8f0f5 0%, #dce6ed 100%);
+    padding: 60px 0;
+    display: flex;
+    align-items: center;
+}
+
+.login-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    background: var(--white);
+    border-radius: 32px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+}
+
+/* Brand Side */
+.brand-side {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    padding: 50px;
+    position: relative;
+    overflow: hidden;
+}
+
+.brand-side::before {
+    content: '';
+    position: absolute;
+    top: -30%;
+    right: -20%;
+    width: 80%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(212,165,58,0.12) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.brand-content {
+    position: relative;
+    z-index: 2;
+}
+
+.welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.95);
+    padding: 8px 20px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--primary);
+    margin-bottom: 30px;
+}
+
+.welcome-badge i {
+    color: var(--secondary);
+}
+
+.brand-title {
+    font-size: 42px;
+    line-height: 1.2;
+    color: var(--white);
+    margin-bottom: 20px;
+}
+
+.brand-title .highlight {
+    color: var(--secondary);
+    border-bottom: 3px solid var(--secondary);
+    display: inline-block;
+}
+
+.brand-description {
+    color: rgba(255,255,255,0.9);
+    font-size: 15px;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+/* Stats */
+.stats-container {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--secondary);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+}
+
+/* Feature Grid */
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.feature-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 12px;
+    transition: var(--transition);
+}
+
+.feature-card:hover {
+    background: rgba(255,255,255,0.15);
+    transform: translateX(5px);
+}
+
+.feature-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(212,165,58,0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--secondary);
+}
+
+.feature-info h4 {
+    font-size: 14px;
+    color: var(--white);
+    margin-bottom: 4px;
+}
+
+.feature-info p {
+    font-size: 11px;
+    color: rgba(255,255,255,0.6);
+}
+
+.trust-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255,255,255,0.1);
+    padding: 8px 16px;
+    border-radius: 40px;
+}
+
+.trust-badge i {
+    font-size: 16px;
+    color: var(--secondary);
+}
+
+.trust-badge span {
+    font-size: 11px;
+    color: rgba(255,255,255,0.8);
+}
+
+/* Form Side */
+.form-side {
+    padding: 50px;
+    background: var(--white);
+    display: flex;
+    align-items: center;
+}
+
+.form-container {
+    width: 100%;
+    max-width: 450px;
+    margin: 0 auto;
+}
+
+.form-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.form-icon {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+}
+
+.form-icon i {
+    font-size: 32px;
+    color: var(--secondary);
+}
+
+.form-header h2 {
+    font-size: 28px;
+    color: var(--dark);
+    margin-bottom: 5px;
+}
+
+.form-header p {
+    color: var(--gray);
+}
+
+/* Input Groups */
+.input-group {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.input-icon {
+    width: 50px;
+    height: 50px;
+    background: var(--gray-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--primary);
+}
+
+.input-field {
+    flex: 1;
+}
+
+.input-field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--dark);
+}
+
+.form-input {
+    width: 100%;
+    padding: 12px 15px;
+    border: 2px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-family: inherit;
+    transition: var(--transition);
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10,92,126,0.1);
+}
+
+.password-container {
+    position: relative;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray);
+    font-size: 16px;
+}
+
+/* Form Options */
+.form-options {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--gray);
+}
+
+.checkbox-container input {
+    display: none;
+}
+
+.checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #cbd5e1;
+    border-radius: 4px;
+    display: inline-block;
+    position: relative;
+}
+
+.checkbox-container input:checked + .checkmark {
+    background: var(--primary);
+    border-color: var(--primary);
+}
+
+.checkbox-container input:checked + .checkmark::after {
+    content: '\f00c';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 10px;
+    color: white;
+}
+
+.forgot-password {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+/* Login Button */
+.login-btn {
+    width: 100%;
+    padding: 14px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+    border: none;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 25px;
+}
+
+.login-btn .btn-text {
+    color: var(--white);
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.login-btn .btn-icon {
+    color: var(--secondary);
+    transition: var(--transition);
+}
+
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(10,92,126,0.3);
+}
+
+.login-btn:hover .btn-icon {
+    transform: translateX(5px);
+}
+
+/* Divider */
+.divider {
+    text-align: center;
+    position: relative;
+    margin: 25px 0;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.divider span {
+    background: var(--white);
+    padding: 0 15px;
+    position: relative;
+    color: var(--gray);
+    font-size: 14px;
+}
+
+.register-prompt {
+    text-align: center;
+}
+
+.register-now {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 25px;
+    background: transparent;
+    border: 2px solid var(--primary);
+    border-radius: 40px;
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.register-now:hover {
+    background: var(--primary);
+    color: var(--white);
+}
+
+/* Demo Credentials */
+.demo-credentials {
+    margin-top: 30px;
+    padding: 15px;
+    background: var(--gray-light);
+    border-radius: 12px;
+}
+
+.demo-title {
+    font-size: 12px;
+    color: var(--gray);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.demo-cards {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.demo-card {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: var(--white);
+    border-radius: 8px;
+    font-size: 12px;
+}
+
+.demo-label {
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.demo-value {
+    font-family: monospace;
+    color: var(--primary);
+}
+
+.copy-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--gray);
+    transition: var(--transition);
+}
+
+.copy-btn:hover {
+    color: var(--primary);
+}
+
+/* Alert Container */
+.alert-container {
+    margin-bottom: 20px;
+}
+
+.alert {
+    padding: 12px 16px;
+    border-radius: 10px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    animation: slideDown 0.3s ease;
+}
+
+.alert-success {
+    background: #d1fae5;
+    color: #065f46;
+    border-left: 4px solid var(--success);
+}
+
+.alert-error {
+    background: #fee2e2;
+    color: #991b1b;
+    border-left: 4px solid var(--error);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Partners Section */
+.partners-section {
+    margin-top: 50px;
+    background: var(--white);
+    border-radius: 24px;
+    padding: 30px;
+    box-shadow: var(--shadow);
+}
+
+.partners-title {
+    text-align: center;
+    margin-bottom: 25px;
+    font-size: 20px;
+    color: var(--dark);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.partners-title i {
+    color: var(--secondary);
+}
+
+.partners-marquee {
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.marquee-content {
+    display: inline-flex;
+    animation: scrollMarquee 25s linear infinite;
+}
+
+.marquee-content .partner-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 25px;
+    margin: 0 10px;
+    background: var(--gray-light);
+    border-radius: 50px;
+    transition: var(--transition);
+}
+
+.marquee-content .partner-item:hover {
+    background: var(--primary);
+    transform: scale(1.05);
+}
+
+.marquee-content .partner-item:hover span {
+    color: var(--white);
+}
+
+.marquee-content .partner-item i {
+    font-size: 22px;
+    color: var(--secondary);
+}
+
+.marquee-content .partner-item span {
+    font-weight: 500;
+    color: var(--dark);
+}
+
+@keyframes scrollMarquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+/* ========== FOOTER ========== */
+.main-footer {
+    background: var(--dark);
+    color: var(--white);
+    padding: 60px 0 20px;
+    margin-top: 60px;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 40px;
+    margin-bottom: 40px;
+}
+
+.footer-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.footer-logo i {
+    font-size: 32px;
+    color: var(--secondary);
+}
+
+.footer-logo-main {
+    font-size: 18px;
+    font-weight: 800;
+    display: block;
+}
+
+.footer-logo-sub {
+    font-size: 9px;
+    opacity: 0.7;
+    display: block;
+}
+
+.footer-about p {
+    line-height: 1.6;
+    opacity: 0.8;
+    margin-bottom: 20px;
+}
+
+.social-links {
+    display: flex;
+    gap: 15px;
+}
+
+.social-links a {
+    width: 35px;
+    height: 35px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--white);
+    transition: var(--transition);
+}
+
+.social-links a:hover {
+    background: var(--secondary);
+    transform: translateY(-3px);
+}
+
+.footer-links h4, .footer-contact h4 {
+    font-size: 18px;
+    margin-bottom: 20px;
+    position: relative;
+    padding-bottom: 10px;
+}
+
+.footer-links h4::after, .footer-contact h4::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 40px;
+    height: 2px;
+    background: var(--secondary);
+}
+
+.footer-links ul, .footer-contact ul {
+    list-style: none;
+}
+
+.footer-links ul li, .footer-contact ul li {
+    margin-bottom: 12px;
+}
+
+.footer-links ul li a, .footer-contact ul li a {
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.footer-links ul li a:hover {
+    color: var(--secondary);
+    padding-left: 5px;
+}
+
+.footer-contact ul li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255,255,255,0.7);
+}
+
+.footer-contact ul li i {
+    width: 20px;
+    color: var(--secondary);
+}
+
+.footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.1);
+    padding-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.footer-bottom p {
+    opacity: 0.6;
+    font-size: 14px;
+}
+
+.footer-bottom-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-bottom-links a {
+    color: rgba(255,255,255,0.6);
+    text-decoration: none;
+    font-size: 14px;
+}
+
+.footer-bottom-links a:hover {
+    color: var(--secondary);
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1200px) {
+    .brand-title { font-size: 34px; }
+    .feature-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 992px) {
+    .login-container { grid-template-columns: 1fr; }
+    .brand-side, .form-side { padding: 40px; }
+    
+    .main-nav {
+        position: fixed;
+        top: 80px;
+        left: -100%;
+        width: 80%;
+        height: calc(100vh - 80px);
+        background: var(--white);
+        flex-direction: column;
+        transition: var(--transition);
+        z-index: 999;
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .main-nav.active { left: 0; }
+    .nav-menu { flex-direction: column; padding: 30px; gap: 20px; }
+    
+    .dropdown-menu {
+        position: static;
+        box-shadow: none;
+        padding-left: 20px;
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        display: none;
+    }
+    
+    .dropdown.active .dropdown-menu { display: block; }
+    .mobile-toggle { display: block; }
+    .header-btns .btn-register, .header-btns .btn-login-header { display: none; }
+    .stats-container { flex-wrap: wrap; justify-content: center; gap: 20px; }
+}
+
+@media (max-width: 768px) {
+    .container { padding: 0 20px; }
+    .brand-side, .form-side { padding: 30px; }
+    .brand-title { font-size: 28px; }
+    .stats-container { flex-direction: column; align-items: center; }
+    .footer-grid { grid-template-columns: 1fr; gap: 30px; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .footer-bottom-links { justify-content: center; }
+}
+
+@media (max-width: 480px) {
+    .input-group { flex-direction: column; }
+    .input-icon { display: none; }
+    .demo-cards { flex-direction: column; }
+    .feature-grid { grid-template-columns: 1fr; }
+}
+/* ============================================
+   DASHBOARD STYLES (added) - same design tokens
+   ============================================ */
+.dash-body {
+    background: var(--gray-light);
+    min-height: 100vh;
+}
+
+.dash-hero {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 100%);
+    padding: 40px 0 80px;
+    color: var(--white);
+}
+
+.dash-hero .container { position: relative; z-index: 2; }
+
+.dash-welcome { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
+.dash-welcome h1 { font-size: 30px; margin-bottom: 6px; }
+.dash-welcome h1 span { color: var(--secondary); }
+.dash-welcome p { color: rgba(255,255,255,0.8); font-size: 14px; }
+
+.btn-logout {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 10px 22px; border-radius: 40px; cursor: pointer;
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.3);
+    color: var(--white); font-weight: 600; font-family: inherit; font-size: 14px;
+    transition: var(--transition);
+}
+.btn-logout:hover { background: var(--secondary); border-color: var(--secondary); }
+
+/* Stat cards row */
+.dash-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-top: -50px; position: relative; z-index: 5; }
+.dash-stat {
+    background: var(--white); border-radius: var(--radius); padding: 22px;
+    box-shadow: var(--shadow); display: flex; align-items: center; gap: 16px;
+}
+.dash-stat .ds-icon {
+    width: 54px; height: 54px; border-radius: 14px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--secondary);
+}
+.dash-stat .ds-num { font-size: 26px; font-weight: 800; color: var(--primary); }
+.dash-stat .ds-label { font-size: 12px; color: var(--gray); }
+
+/* Panel / card */
+.panel { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 28px; margin-top: 30px; }
+.panel-head { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 22px; }
+.panel-head h2 { font-size: 20px; color: var(--dark); display: flex; align-items: center; gap: 10px; }
+.panel-head h2 i { color: var(--secondary); }
+
+.btn-primary {
+    display: inline-flex; align-items: center; gap: 8px; padding: 11px 22px;
+    background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: var(--white);
+    border: none; border-radius: 40px; font-weight: 600; cursor: pointer; font-family: inherit;
+    font-size: 14px; transition: var(--transition);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(10,92,126,0.3); }
+
+/* Search */
+.dash-search { position: relative; max-width: 320px; flex: 1; }
+.dash-search input { width: 100%; padding: 11px 14px 11px 40px; border: 2px solid #e2e8f0; border-radius: 40px; font-family: inherit; font-size: 14px; }
+.dash-search input:focus { outline: none; border-color: var(--primary); }
+.dash-search i { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--gray); }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table.agents-table { width: 100%; border-collapse: collapse; min-width: 760px; }
+.agents-table th {
+    text-align: left; padding: 14px 16px; font-size: 12px; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--gray); border-bottom: 2px solid var(--gray-light);
+}
+.agents-table td { padding: 16px; border-bottom: 1px solid var(--gray-light); font-size: 14px; color: var(--gray-dark); vertical-align: middle; }
+.agents-table tr:hover td { background: #f8fafb; }
+
+.agent-cell { display: flex; align-items: center; gap: 12px; }
+.agent-avatar {
+    width: 40px; height: 40px; border-radius: 50%; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--white);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+}
+.agent-name { font-weight: 600; color: var(--dark); }
+.agent-mail { font-size: 12px; color: var(--gray); }
+
+.badge { display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 40px; font-size: 12px; font-weight: 600; }
+.badge-admin { background: rgba(212,165,58,0.15); color: var(--secondary-dark); }
+.badge-agent { background: rgba(10,92,126,0.1); color: var(--primary); }
+.badge-active { background: #d1fae5; color: #065f46; }
+.badge-inactive { background: #fee2e2; color: #991b1b; }
+
+.row-actions { display: flex; gap: 8px; }
+.icon-btn {
+    width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; transition: var(--transition);
+}
+.icon-btn.toggle { background: var(--gray-light); color: var(--primary); }
+.icon-btn.toggle:hover { background: var(--primary); color: var(--white); }
+.icon-btn.del { background: #fee2e2; color: var(--error); }
+.icon-btn.del:hover { background: var(--error); color: var(--white); }
+
+.empty-state { text-align: center; padding: 50px 20px; color: var(--gray); }
+.empty-state i { font-size: 40px; color: #cbd5e1; margin-bottom: 14px; }
+
+.loading-row { text-align: center; padding: 40px; color: var(--gray); }
+
+@media (max-width: 768px) {
+    .dash-stats { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 480px) {
+    .dash-stats { grid-template-columns: 1fr; }
+    .panel { padding: 18px; }
+}
