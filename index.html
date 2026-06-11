@@ -175,12 +175,19 @@
             </section>
 
             <div class="container">
-                <!-- Stat cards (labels filled by JS per role) -->
-                <div class="dash-stats">
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-layer-group"></i></div><div><div class="ds-num" id="stat1">0</div><div class="ds-label" id="lbl1">—</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-chair"></i></div><div><div class="ds-num" id="stat2">0</div><div class="ds-label" id="lbl2">—</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-bell"></i></div><div><div class="ds-num" id="stat3">0</div><div class="ds-label" id="lbl3">—</div></div></div>
-                    <div class="dash-stat"><div class="ds-icon"><i class="fas fa-circle-check"></i></div><div><div class="ds-num" id="stat4">0</div><div class="ds-label" id="lbl4">—</div></div></div>
+                <!-- Stat cards -->
+                <div class="dash-stats" id="statsRow">
+                    <div class="dash-stat c1"><div class="ds-icon"><i class="fas fa-users"></i></div><div><div class="ds-num" id="stat1">0</div><div class="ds-label" id="lbl1">—</div></div></div>
+                    <div class="dash-stat c5"><div class="ds-icon"><i class="fas fa-layer-group"></i></div><div><div class="ds-num" id="stat2">0</div><div class="ds-label" id="lbl2">—</div></div></div>
+                    <div class="dash-stat c6"><div class="ds-icon"><i class="fas fa-chair"></i></div><div><div class="ds-num" id="stat3">0</div><div class="ds-label" id="lbl3">—</div></div></div>
+                    <div class="dash-stat c7"><div class="ds-icon"><i class="fas fa-plane"></i></div><div><div class="ds-num" id="stat4">0</div><div class="ds-label" id="lbl4">—</div></div></div>
+                    <div class="dash-stat c2" id="card5"><div class="ds-icon"><i class="fas fa-bell"></i></div><div><div class="ds-num" id="stat5">0</div><div class="ds-label" id="lbl5">Pending Bookings</div></div></div>
+                </div>
+
+                <!-- Flight Date Schedule (admin) -->
+                <div class="panel" id="schedulePanel" style="display:none">
+                    <div class="panel-head"><h2><i class="fas fa-calendar-days"></i> Flight Date Schedule — Upcoming Departures</h2></div>
+                    <div id="scheduleGrid" class="sched-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
                 </div>
 
                 <!-- Tabs -->
@@ -192,33 +199,53 @@
                     <button class="dash-tab" data-tab="panelMyRes" data-for="agent"><i class="fas fa-ticket"></i> My Bookings</button>
                 </div>
 
-                <!-- ===== ADMIN: GROUPS ===== -->
+                <!-- ADMIN: GROUPS -->
                 <div class="panel tab-panel" id="panelGroups" style="display:none">
                     <div class="panel-head">
                         <h2><i class="fas fa-layer-group"></i> Flight Groups</h2>
                         <button class="btn-primary" id="addGroupBtn"><i class="fas fa-plus"></i> Add Group</button>
                     </div>
-                    <div class="table-wrap">
-                        <table class="agents-table">
-                            <thead>
-                                <tr><th>Route</th><th>Airline</th><th>Date</th><th>Price</th><th>Seats</th><th style="text-align:right">Actions</th></tr>
-                            </thead>
-                            <tbody id="groupsTableBody">
-                                <tr><td colspan="6" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading groups...</td></tr>
-                            </tbody>
-                        </table>
+
+                    <!-- Add Group form (hidden) -->
+                    <div class="group-form" id="groupFormWrap" style="display:none">
+                        <div class="gf-pnr">
+                            <label><i class="fas fa-terminal"></i> Auto-Fill from Galileo / Travelport PNR (optional)</label>
+                            <textarea id="pnrText" placeholder="Paste Galileo PNR here..."></textarea>
+                            <button class="btn-parse" id="pnrParseBtn"><i class="fas fa-wand-magic-sparkles"></i> Auto-Parse</button>
+                        </div>
+                        <div class="gf-grid">
+                            <div class="gf-field"><label>Airline <span class="req">*</span></label><input id="gAirline" placeholder="PIA"></div>
+                            <div class="gf-field"><label>Flight No</label><input id="gFlightNo" placeholder="PK-754"></div>
+                            <div class="gf-field"><label>Return Flight</label><input id="gReturnFlight" placeholder="PK-755"></div>
+                            <div class="gf-field"><label>PNR</label><input id="gPnr" placeholder="ABCD12"></div>
+                            <div class="gf-field"><label>From <span class="req">*</span></label><input id="gFrom" placeholder="ISB"></div>
+                            <div class="gf-field"><label>To <span class="req">*</span></label><input id="gTo" placeholder="JED"></div>
+                            <div class="gf-field"><label>Departure Date <span class="req">*</span></label><input id="gDepDate" type="date"></div>
+                            <div class="gf-field"><label>Dep Time</label><input id="gDepTime" type="time"></div>
+                            <div class="gf-field"><label>Arrival Time</label><input id="gArrTime" type="time"></div>
+                            <div class="gf-field"><label>Return Date</label><input id="gReturnDate" type="date"></div>
+                            <div class="gf-field"><label>Return Dep Time</label><input id="gReturnDepTime" type="time"></div>
+                            <div class="gf-field"><label>Return Arr Time</label><input id="gReturnArrTime" type="time"></div>
+                            <div class="gf-field"><label>Total Seats <span class="req">*</span></label><input id="gSeats" type="number" placeholder="50"></div>
+                            <div class="gf-field"><label>Cost / Seat (PKR)</label><input id="gCost" type="number" placeholder="0"></div>
+                            <div class="gf-field"><label>Sale Price (PKR) <span class="req">*</span></label><input id="gSale" type="number" placeholder="0"></div>
+                        </div>
+                        <div class="gf-actions">
+                            <button class="btn-primary" id="saveGroupBtn"><i class="fas fa-floppy-disk"></i> Save Group</button>
+                            <button class="btn-ghost" id="cancelGroupBtn">Cancel</button>
+                        </div>
                     </div>
+
+                    <div id="groupsList"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading groups...</div></div>
                 </div>
 
-                <!-- ===== ADMIN: RESERVATIONS ===== -->
+                <!-- ADMIN: RESERVATIONS -->
                 <div class="panel tab-panel" id="panelReservations" style="display:none">
                     <div class="panel-head"><h2><i class="fas fa-bell"></i> Reservations</h2></div>
-                    <div id="reservationsList" class="card-grid">
-                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
-                    </div>
+                    <div id="reservationsList" class="card-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
                 </div>
 
-                <!-- ===== ADMIN: AGENTS ===== -->
+                <!-- ADMIN: AGENTS -->
                 <div class="panel tab-panel" id="panelAgents" style="display:none">
                     <div class="panel-head">
                         <h2><i class="fas fa-user-group"></i> Manage Agents</h2>
@@ -229,35 +256,26 @@
                     </div>
                     <div class="table-wrap">
                         <table class="agents-table">
-                            <thead>
-                                <tr><th>Agent</th><th>Agency</th><th>Phone</th><th>Role</th><th>Status</th><th style="text-align:right">Actions</th></tr>
-                            </thead>
-                            <tbody id="agentsTableBody">
-                                <tr><td colspan="6" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading agents...</td></tr>
-                            </tbody>
+                            <thead><tr><th>Agent</th><th>Agency</th><th>Phone</th><th>Role</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
+                            <tbody id="agentsTableBody"><tr><td colspan="6" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading agents...</td></tr></tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- ===== AGENT: AVAILABLE GROUPS ===== -->
+                <!-- AGENT: AVAILABLE -->
                 <div class="panel tab-panel" id="panelAvailable" style="display:none">
                     <div class="panel-head"><h2><i class="fas fa-plane-departure"></i> Available Groups</h2></div>
-                    <div id="availableGroupsList" class="card-grid">
-                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
-                    </div>
+                    <div id="availableGroupsList"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
                 </div>
 
-                <!-- ===== AGENT: MY BOOKINGS ===== -->
+                <!-- AGENT: MY BOOKINGS -->
                 <div class="panel tab-panel" id="panelMyRes" style="display:none">
                     <div class="panel-head"><h2><i class="fas fa-ticket"></i> My Bookings</h2></div>
-                    <div id="myResList" class="card-grid">
-                        <div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div>
-                    </div>
+                    <div id="myResList" class="card-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
                 </div>
             </div>
             <div style="height:60px"></div>
         </div>
-
         <!-- ===== FOOTER ===== -->
         <footer class="main-footer">
             <div class="container">
