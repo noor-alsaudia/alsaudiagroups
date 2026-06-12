@@ -1,322 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Al Saudia Travel | Agent Portal</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Al Saudia Travel | Agent Portal</title>
+  <meta name="description" content="Al Saudia Travel Agency admin dashboard — manage flight groups, reservations, and agents." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Sora:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #f6f4ff;
+      --surface: #fdfdff;
+      --brand: #7c5cff;
+      --brand-10: rgba(124,92,255,0.10);
+      --gold: #f59e0b;
+      --gold-10: rgba(245,158,11,0.10);
+      --gold-20: rgba(245,158,11,0.20);
+      --text-950: #09090b;
+      --text-900: #18181b;
+      --text-600: #52525b;
+      --text-500: #71717a;
+      --text-400: #a1a1aa;
+      --ring-black: rgba(0,0,0,0.05);
+      --ring-gold: rgba(245,158,11,0.20);
+      --zinc-50: #fafafa;
+      --zinc-100: #f4f4f5;
+      --zinc-200: #e4e4e7;
+      --red-50: #fef2f2;
+      --red-400: #f87171;
+      --red-600: #dc2626;
+    }
+    body { font-family: 'Manrope', ui-sans-serif, system-ui, sans-serif; background: var(--bg); color: var(--text-900); line-height: 1.45; -webkit-font-smoothing: antialiased; }
+    h1, h2, h3, h4, h5, h6 { font-family: 'Sora', ui-sans-serif, system-ui, sans-serif; }
 
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <link rel="stylesheet" href="style.css">
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0; width: 256px;
+      display: flex; flex-direction: column;
+      background: rgba(253,253,255,0.80); backdrop-filter: blur(12px);
+      border-right: 1px solid rgba(0,0,0,0.05); padding: 24px; z-index: 20;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; margin-bottom: 40px; }
+    .brand-icon { width: 36px; height: 36px; border-radius: 12px; background: var(--brand); display: grid; place-items: center; }
+    .brand-icon svg { width: 20px; height: 20px; color: #fff; }
+    .brand-title { line-height: 1.25; }
+    .brand-title strong { display: block; font-size: 18px; font-weight: 600; letter-spacing: -0.02em; }
+    .brand-title span { display: block; font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.18em; color: var(--text-400); }
+
+    .nav { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+    .nav a {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; border-radius: 12px;
+      font-size: 14px; font-weight: 500; color: var(--text-600); text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+    }
+    .nav a:hover { background: var(--zinc-100); }
+    .nav a.active { background: var(--brand-10); color: var(--brand); }
+    .nav a svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+    .profile {
+      margin-top: auto;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 12px; cursor: pointer;
+      transition: background 0.15s; color: var(--text-600);
+    }
+    .profile:hover { background: var(--zinc-100); }
+    .profile-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .avatar { width: 28px; height: 28px; border-radius: 9999px; flex-shrink: 0; background: linear-gradient(135deg, var(--brand), var(--gold)); outline: 1px solid rgba(0,0,0,0.05); outline-offset: -1px; }
+    .profile-name { font-size: 12px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .profile svg { width: 16px; height: 16px; opacity: 0.6; flex-shrink: 0; }
+
+    /* Main */
+    .main { flex: 1; margin-left: 256px; padding: 32px; }
+    .header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+    .header-text { min-width: 0; }
+    .header h1 { font-size: 24px; font-weight: 600; color: var(--text-950); line-height: 1.2; }
+    .header p { margin-top: 4px; font-size: 14px; color: var(--text-600); max-width: 56ch; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 16px; border-radius: 12px; border: none; cursor: pointer;
+      font-size: 14px; font-weight: 500; font-family: inherit;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-brand { background: var(--brand); color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .btn-brand:hover { transform: scale(1.02); }
+    .btn svg { width: 16px; height: 16px; }
+
+    /* KPI Bento */
+    .bento { display: grid; grid-template-columns: repeat(12, 1fr); gap: 16px; margin-bottom: 32px; }
+    .card {
+      background: var(--surface); border-radius: 16px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04); outline: 1px solid var(--ring-black); outline-offset: -1px;
+      padding: 24px;
+    }
+    .card-label { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-400); margin-bottom: 8px; }
+    .card-value { font-family: 'Sora', sans-serif; font-size: 28px; font-weight: 600; color: var(--text-950); }
+    .card-value-sm { font-size: 22px; }
+    .card-delta { font-size: 12px; font-weight: 500; color: var(--brand); margin-left: 8px; }
+    .card-gold { background: var(--gold-10); outline-color: var(--ring-gold); }
+    .card-gold .card-label { color: var(--gold); }
+    .card-gold .card-value { color: var(--gold); }
+    .card-bottom { border-bottom: 2px solid var(--brand-10); }
+
+    /* Grid columns helpers */
+    .col-4 { grid-column: span 4; }
+    .col-2 { grid-column: span 2; }
+    .col-12 { grid-column: span 12; }
+
+    /* Two-column layout */
+    .row { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+    .section-title { font-size: 18px; font-weight: 600; margin-bottom: 16px; padding-left: 4px; }
+
+    /* Upcoming card */
+    .departure-card { position: relative; overflow: hidden; }
+    .badge {
+      position: absolute; top: 12px; right: 12px;
+      background: var(--gold); color: #fff;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      padding: 4px 10px; border-radius: 9999px;
+    }
+    .departure-body { display: flex; align-items: flex-start; gap: 16px; }
+    .date-box { background: var(--zinc-100); border-radius: 12px; padding: 10px 14px; text-align: center; }
+    .date-box .month { display: block; font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-400); }
+    .date-box .day { display: block; font-family: 'Sora', sans-serif; font-size: 20px; font-weight: 600; color: var(--text-950); }
+    .departure-meta p:first-child { font-size: 14px; font-weight: 600; color: var(--text-900); }
+    .departure-meta p:last-child { font-size: 12px; color: var(--text-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .departure-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--zinc-100); }
+    .departure-footer span { font-size: 12px; font-weight: 500; color: var(--text-600); }
+    .departure-footer a { font-size: 12px; font-weight: 600; color: var(--brand); text-decoration: none; }
+    .departure-footer a:hover { text-decoration: underline; }
+    .empty-state { display: flex; align-items: center; justify-content: center; padding: 20px; border: 1px dashed var(--zinc-200); border-radius: 16px; background: rgba(253,253,255,0.50); }
+    .empty-state p { font-size: 12px; color: var(--text-400); }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 24px; border-bottom: 1px solid var(--zinc-200); margin-bottom: 24px; }
+    .tab { padding-bottom: 16px; font-size: 14px; font-weight: 500; color: var(--text-400); background: none; border: none; cursor: pointer; font-family: inherit; }
+    .tab:hover { color: var(--text-600); }
+    .tab.active { color: var(--brand); font-weight: 600; border-bottom: 2px solid var(--brand); margin-bottom: -1px; }
+
+    .section-divider { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+    .section-divider h4 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.15em; color: var(--text-400); white-space: nowrap; }
+    .section-divider .line { height: 1px; flex: 1; background: var(--zinc-200); }
+    .section-divider .count { font-size: 11px; font-weight: 500; color: var(--text-400); white-space: nowrap; }
+
+    /* Flight card */
+    .flight-card { overflow: hidden; }
+    .flight-card-header { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; flex-wrap: wrap; }
+    .airline { display: flex; align-items: center; gap: 16px; min-width: 0; }
+    .airline-logo { width: 40px; height: 40px; border-radius: 12px; background: var(--zinc-100); display: grid; place-items: center; outline: 1px solid rgba(0,0,0,0.05); outline-offset: -1px; flex-shrink: 0; }
+    .airline-logo span { font-size: 10px; font-weight: 700; color: var(--text-500); }
+    .airline-info p:first-child { font-family: 'Sora', sans-serif; font-weight: 600; color: var(--text-950); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .airline-info p:last-child { font-size: 12px; color: var(--text-600); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .seats { text-align: right; flex-shrink: 0; }
+    .seats p:first-child { font-size: 12px; font-weight: 500; color: var(--text-400); }
+    .seats p:last-child { font-size: 14px; font-weight: 600; color: var(--brand); }
+
+    .flight-meta { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .meta-box { background: var(--zinc-50); border-radius: 12px; padding: 12px; }
+    .meta-box p:first-child { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text-400); margin-bottom: 4px; }
+    .meta-box p:last-child { font-size: 14px; font-weight: 600; color: var(--text-950); }
+    .meta-actions { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 10px; border: none; background: transparent; cursor: pointer; display: grid; place-items: center; color: var(--text-400); transition: background 0.15s, color 0.15s; }
+    .icon-btn:hover { background: var(--zinc-100); color: var(--text-600); }
+    .icon-btn.danger:hover { background: var(--red-50); color: var(--red-600); }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    .flight-footer { display: flex; align-items: center; justify-content: space-between; padding: 12px 24px; background: rgba(250,250,250,0.50); border-top: 1px solid var(--zinc-100); }
+    .flight-footer span { font-size: 11px; font-weight: 500; color: var(--text-500); }
+    .flight-footer a { font-size: 12px; font-weight: 600; color: var(--brand); text-decoration: none; }
+    .flight-footer a:hover { text-decoration: underline; }
+
+    /* Sold out card */
+    .soldout { opacity: 0.6; }
+    .soldout-badge { background: var(--zinc-100); color: var(--text-400); font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 6px 12px; border-radius: 9999px; border: none; flex-shrink: 0; }
+
+    /* Responsive */
+    @media (max-width: 1023px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; }
+      .bento { grid-template-columns: repeat(2, 1fr); }
+      .col-4, .col-2 { grid-column: span 1; }
+      .row { grid-template-columns: 1fr; }
+      .flight-meta { grid-template-columns: 1fr 1fr; }
+      .meta-actions { grid-column: span 2; justify-content: flex-start; margin-top: 4px; }
+    }
+    @media (max-width: 640px) {
+      .main { padding: 20px; }
+      .header { flex-direction: column; align-items: flex-start; }
+      .bento { grid-template-columns: 1fr; }
+      .flight-meta { grid-template-columns: 1fr; }
+      .meta-actions { grid-column: span 1; }
+      .flight-card-header { flex-direction: column; align-items: flex-start; }
+      .seats { text-align: left; }
+    }
+  </style>
 </head>
 <body>
-
-    <!-- Preloader -->
-    <div class="preloader">
-        <div class="loader">
-            <div class="plane-icon"><i class="fas fa-plane"></i></div>
-            <div class="loader-text">Al Saudia Travel</div>
+  <div class="layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
         </div>
-    </div>
-
-    <div class="page-wrapper">
-
-        <!-- ===== HEADER ===== -->
-        <header class="main-header">
-            <div class="container">
-                <div class="header-inner">
-                    <div class="logo" data-aos="fade-right" data-aos-duration="800">
-                        <a href="#">
-                            <div class="logo-icon"><i class="fas fa-plane-circle-check"></i></div>
-                            <div class="logo-text">
-                                <span class="logo-main">AL SAUDIA</span>
-                                <span class="logo-sub">TRAVEL AGENCY</span>
-                            </div>
-                        </a>
-                    </div>
-
-                    <nav class="main-nav" id="mainNav">
-                        <ul class="nav-menu">
-                            <li><a href="#home">Home</a></li>
-                            <li><a href="#about">About Us</a></li>
-                            <li><a href="#umrah">Umrah Packages</a></li>
-                            <li class="dropdown">
-                                <a href="#">Services <i class="fas fa-chevron-down"></i></a>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#"><i class="fas fa-ticket-alt"></i> Air Tickets</a></li>
-                                    <li><a href="#"><i class="fas fa-mosque"></i> Umrah Packages</a></li>
-                                    <li><a href="#"><i class="fas fa-hotel"></i> Hotel Bookings</a></li>
-                                    <li><a href="#"><i class="fas fa-passport"></i> Visa Assistance</a></li>
-                                    <li><a href="#"><i class="fas fa-umbrella-beach"></i> Tour Packages</a></li>
-                                    <li><a href="#"><i class="fas fa-shield-heart"></i> Travel Insurance</a></li>
-                                </ul>
-                            </li>
-                            <li><a href="#groups">Group Bookings</a></li>
-                            <li><a href="#contact">Contact Us</a></li>
-                        </ul>
-                    </nav>
-
-                    <!-- Guest buttons (logged out) -->
-                    <div class="header-btns" id="headerGuest" data-aos="fade-left" data-aos-duration="800">
-                        <a href="#" class="btn-register" id="registerBtn"><i class="fas fa-user-plus"></i> Register</a>
-                        <a href="#" class="btn-login-header active"><i class="fas fa-lock"></i> Login</a>
-                        <button class="mobile-toggle" id="mobileToggle"><i class="fas fa-bars"></i></button>
-                    </div>
-
-                    <!-- User buttons (logged in) -->
-                    <div class="header-btns" id="headerUser" style="display:none">
-                        <button class="btn-logout" id="headerLogout"><i class="fas fa-right-from-bracket"></i> Logout</button>
-                    </div>
-                </div>
-            </div>
-        </header>
-
-        <!-- ===================================================== -->
-        <!-- ============== LOGIN VIEW (logged out) =============== -->
-        <!-- ===================================================== -->
-        <section class="login-hero" id="loginView">
-            <div class="container">
-                <div class="login-container">
-
-                    <div class="brand-side" data-aos="fade-right" data-aos-duration="1000">
-                        <div class="brand-content">
-                            <div class="welcome-badge"><i class="fas fa-crown"></i><span>Premium Travel Partner Since 2015</span></div>
-                            <h1 class="brand-title">Welcome Back,<br><span class="highlight">Travel Agent</span></h1>
-                            <p class="brand-description">Access exclusive group flight rates, manage your Umrah bookings, and get real-time updates on airline deals - all in one place.</p>
-                            <div class="stats-container">
-                                <div class="stat-item"><div class="stat-number">5000+</div><div class="stat-label">Happy Travelers</div></div>
-                                <div class="stat-item"><div class="stat-number">50+</div><div class="stat-label">Partner Agents</div></div>
-                                <div class="stat-item"><div class="stat-number">15+</div><div class="stat-label">Airlines Partners</div></div>
-                            </div>
-                            <div class="feature-grid">
-                                <div class="feature-card"><div class="feature-icon"><i class="fas fa-tags"></i></div><div class="feature-info"><h4>Best Group Rates</h4><p>Negotiated prices for Umrah &amp; Hajj groups</p></div></div>
-                                <div class="feature-card"><div class="feature-icon"><i class="fas fa-clock"></i></div><div class="feature-info"><h4>24/7 Support</h4><p>Dedicated team for agents</p></div></div>
-                                <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-simple"></i></div><div class="feature-info"><h4>Real-time Updates</h4><p>Live flight &amp; visa status</p></div></div>
-                                <div class="feature-card"><div class="feature-icon"><i class="fas fa-shield"></i></div><div class="feature-info"><h4>Secure Platform</h4><p>100% encrypted data</p></div></div>
-                            </div>
-                            <div class="trust-section"><div class="trust-badge"><i class="fas fa-shield-heart"></i><span>IATA Certified | Licensed by Ministry of Tourism</span></div></div>
-                        </div>
-                    </div>
-
-                    <div class="form-side" data-aos="fade-left" data-aos-duration="1000">
-                        <div class="form-container">
-                            <div class="form-header">
-                                <div class="form-icon"><i class="fas fa-user-circle"></i></div>
-                                <h2>Agent Login</h2>
-                                <p>Sign in to access your dashboard</p>
-                            </div>
-                            <div id="alertContainer" class="alert-container"></div>
-                            <form id="loginForm">
-                                <div class="input-group">
-                                    <div class="input-icon"><i class="fas fa-envelope"></i></div>
-                                    <div class="input-field">
-                                        <label>Email Address</label>
-                                        <input type="email" id="email" class="form-input" placeholder="agent@alsaudiatravel.com" autocomplete="off" required>
-                                    </div>
-                                </div>
-                                <div class="input-group">
-                                    <div class="input-icon"><i class="fas fa-lock"></i></div>
-                                    <div class="input-field">
-                                        <label>Password</label>
-                                        <div class="password-container">
-                                            <input type="password" id="password" class="form-input" placeholder="Enter your password" required>
-                                            <button type="button" class="toggle-password" id="togglePassword"><i class="fas fa-eye-slash"></i></button>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-options">
-                                    <label class="checkbox-container"><input type="checkbox" id="rememberMe"><span class="checkmark"></span>Remember me</label>
-                                    <a href="#" class="forgot-password" id="forgotPassword">Forgot Password?</a>
-                                </div>
-                                <button type="submit" class="login-btn" id="loginBtn">
-                                    <span class="btn-text">Login to Dashboard</span>
-                                    <span class="btn-icon"><i class="fas fa-arrow-right"></i></span>
-                                </button>
-                                <div class="divider"><span>Don't have an account?</span></div>
-                                <div class="register-prompt"><a href="#" class="register-now" id="registerNow"><i class="fas fa-user-plus"></i> Create New Account</a></div>
-                            </form>
-                            <div class="demo-credentials">
-                                <p class="demo-title"><i class="fas fa-info-circle"></i> Account Access</p>
-                                <div class="demo-cards">
-                                    <div class="demo-card" style="flex-basis:100%">
-                                        <span class="demo-label">Note:</span>
-                                        <span class="demo-value" style="font-family:inherit">Accounts are created by your admin. New requests need admin approval.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                </div>
-
-                <div class="partners-section" data-aos="fade-up" data-aos-duration="1000">
-                    <h3 class="partners-title"><i class="fas fa-handshake"></i> Our Valued Airline Partners</h3>
-                    <div class="partners-marquee"><div class="marquee-content" id="marqueeContent"></div></div>
-                </div>
-            </div>
-        </section>
-
-        <!-- ===================================================== -->
-        <!-- ============ DASHBOARD VIEW (logged in) ============= -->
-        <!-- ===================================================== -->
-        <div id="dashboardView" style="display:none">
-            <section class="dash-hero">
-                <div class="container">
-                    <div class="dash-welcome">
-                        <div>
-                            <h1>Welcome, <span id="userName">Agent</span></h1>
-                            <p id="userRoleLine">Manage your travel agency portal</p>
-                        </div>
-                        <button class="btn-logout" id="logoutBtn"><i class="fas fa-right-from-bracket"></i> Logout</button>
-                    </div>
-                </div>
-            </section>
-
-            <div class="container">
-                <!-- Stat cards -->
-                <div class="dash-stats" id="statsRow">
-                    <div class="dash-stat c1"><div class="ds-icon"><i class="fas fa-users"></i></div><div><div class="ds-num" id="stat1">0</div><div class="ds-label" id="lbl1">—</div></div></div>
-                    <div class="dash-stat c5"><div class="ds-icon"><i class="fas fa-layer-group"></i></div><div><div class="ds-num" id="stat2">0</div><div class="ds-label" id="lbl2">—</div></div></div>
-                    <div class="dash-stat c6"><div class="ds-icon"><i class="fas fa-chair"></i></div><div><div class="ds-num" id="stat3">0</div><div class="ds-label" id="lbl3">—</div></div></div>
-                    <div class="dash-stat c7"><div class="ds-icon"><i class="fas fa-plane"></i></div><div><div class="ds-num" id="stat4">0</div><div class="ds-label" id="lbl4">—</div></div></div>
-                    <div class="dash-stat c2" id="card5"><div class="ds-icon"><i class="fas fa-bell"></i></div><div><div class="ds-num" id="stat5">0</div><div class="ds-label" id="lbl5">Pending Bookings</div></div></div>
-                </div>
-
-                <!-- Flight Date Schedule (admin) -->
-                <div class="panel" id="schedulePanel" style="display:none">
-                    <div class="panel-head"><h2><i class="fas fa-calendar-days"></i> Flight Date Schedule — Upcoming Departures</h2></div>
-                    <div id="scheduleGrid" class="sched-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
-                </div>
-
-                <!-- Tabs -->
-                <div class="dash-tabs" id="dashTabs">
-                    <button class="dash-tab" data-tab="panelGroups" data-for="admin"><i class="fas fa-layer-group"></i> Groups</button>
-                    <button class="dash-tab" data-tab="panelReservations" data-for="admin"><i class="fas fa-bell"></i> Reservations <span class="tab-dot" id="pendingDot" style="display:none"></span></button>
-                    <button class="dash-tab" data-tab="panelAgents" data-for="admin"><i class="fas fa-user-group"></i> Agents</button>
-                    <button class="dash-tab" data-tab="panelAvailable" data-for="agent"><i class="fas fa-plane-departure"></i> Available Groups</button>
-                    <button class="dash-tab" data-tab="panelMyRes" data-for="agent"><i class="fas fa-ticket"></i> My Bookings</button>
-                </div>
-
-                <!-- ADMIN: GROUPS -->
-                <div class="panel tab-panel" id="panelGroups" style="display:none">
-                    <div class="panel-head">
-                        <h2><i class="fas fa-layer-group"></i> Flight Groups</h2>
-                        <button class="btn-primary" id="addGroupBtn"><i class="fas fa-plus"></i> Add Group</button>
-                    </div>
-
-                    <!-- Add Group form (hidden) -->
-                    <div class="group-form" id="groupFormWrap" style="display:none">
-                        <div class="gf-pnr">
-                            <label><i class="fas fa-terminal"></i> Auto-Fill from Galileo / Travelport PNR (optional)</label>
-                            <textarea id="pnrText" placeholder="Paste Galileo PNR here..."></textarea>
-                            <button class="btn-parse" id="pnrParseBtn"><i class="fas fa-wand-magic-sparkles"></i> Auto-Parse</button>
-                        </div>
-                        <div class="gf-grid">
-                            <div class="gf-field"><label>Airline <span class="req">*</span></label><input id="gAirline" placeholder="PIA"></div>
-                            <div class="gf-field"><label>Flight No</label><input id="gFlightNo" placeholder="PK-754"></div>
-                            <div class="gf-field"><label>Return Flight</label><input id="gReturnFlight" placeholder="PK-755"></div>
-                            <div class="gf-field"><label>PNR</label><input id="gPnr" placeholder="ABCD12"></div>
-                            <div class="gf-field"><label>From <span class="req">*</span></label><input id="gFrom" placeholder="ISB"></div>
-                            <div class="gf-field"><label>To <span class="req">*</span></label><input id="gTo" placeholder="JED"></div>
-                            <div class="gf-field"><label>Departure Date <span class="req">*</span></label><input id="gDepDate" type="date"></div>
-                            <div class="gf-field"><label>Dep Time</label><input id="gDepTime" type="time"></div>
-                            <div class="gf-field"><label>Arrival Time</label><input id="gArrTime" type="time"></div>
-                            <div class="gf-field"><label>Return Date</label><input id="gReturnDate" type="date"></div>
-                            <div class="gf-field"><label>Return Dep Time</label><input id="gReturnDepTime" type="time"></div>
-                            <div class="gf-field"><label>Return Arr Time</label><input id="gReturnArrTime" type="time"></div>
-                            <div class="gf-field"><label>Total Seats <span class="req">*</span></label><input id="gSeats" type="number" placeholder="50"></div>
-                            <div class="gf-field"><label>Cost / Seat (PKR)</label><input id="gCost" type="number" placeholder="0"></div>
-                            <div class="gf-field"><label>Sale Price (PKR) <span class="req">*</span></label><input id="gSale" type="number" placeholder="0"></div>
-                        </div>
-                        <div class="gf-actions">
-                            <button class="btn-primary" id="saveGroupBtn"><i class="fas fa-floppy-disk"></i> Save Group</button>
-                            <button class="btn-ghost" id="cancelGroupBtn">Cancel</button>
-                        </div>
-                    </div>
-
-                    <div id="groupsList"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading groups...</div></div>
-                </div>
-
-                <!-- ADMIN: RESERVATIONS -->
-                <div class="panel tab-panel" id="panelReservations" style="display:none">
-                    <div class="panel-head"><h2><i class="fas fa-bell"></i> Reservations</h2></div>
-                    <div id="reservationsList" class="card-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
-                </div>
-
-                <!-- ADMIN: AGENTS -->
-                <div class="panel tab-panel" id="panelAgents" style="display:none">
-                    <div class="panel-head">
-                        <h2><i class="fas fa-user-group"></i> Manage Agents</h2>
-                        <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
-                            <div class="dash-search"><i class="fas fa-search"></i><input type="text" id="searchInput" placeholder="Search agents..."></div>
-                            <button class="btn-primary" id="addAgentBtn"><i class="fas fa-user-plus"></i> Add Agent</button>
-                        </div>
-                    </div>
-                    <div class="table-wrap">
-                        <table class="agents-table">
-                            <thead><tr><th>Agent</th><th>Agency</th><th>Phone</th><th>Role</th><th>Status</th><th style="text-align:right">Actions</th></tr></thead>
-                            <tbody id="agentsTableBody"><tr><td colspan="6" class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading agents...</td></tr></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- AGENT: AVAILABLE -->
-                <div class="panel tab-panel" id="panelAvailable" style="display:none">
-                    <div class="panel-head"><h2><i class="fas fa-plane-departure"></i> Available Groups</h2></div>
-                    <div id="availableGroupsList"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
-                </div>
-
-                <!-- AGENT: MY BOOKINGS -->
-                <div class="panel tab-panel" id="panelMyRes" style="display:none">
-                    <div class="panel-head"><h2><i class="fas fa-ticket"></i> My Bookings</h2></div>
-                    <div id="myResList" class="card-grid"><div class="loading-row"><i class="fas fa-spinner fa-spin"></i> Loading...</div></div>
-                </div>
-            </div>
-            <div style="height:60px"></div>
+        <div class="brand-title">
+          <strong>Al Saudia</strong>
+          <span>Travel Agency</span>
         </div>
-        <!-- ===== FOOTER ===== -->
-        <footer class="main-footer">
-            <div class="container">
-                <div class="footer-grid">
-                    <div class="footer-about">
-                        <div class="footer-logo"><i class="fas fa-plane-circle-check"></i><div><span class="footer-logo-main">AL SAUDIA</span><span class="footer-logo-sub">TRAVEL AGENCY</span></div></div>
-                        <p>Your trusted partner for Umrah, Hajj, and group travel arrangements since 2015.</p>
-                        <div class="social-links">
-                            <a href="#"><i class="fab fa-facebook-f"></i></a>
-                            <a href="#"><i class="fab fa-instagram"></i></a>
-                            <a href="#"><i class="fab fa-whatsapp"></i></a>
-                            <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        </div>
-                    </div>
-                    <div class="footer-links">
-                        <h4>Quick Links</h4>
-                        <ul><li><a href="#home">Home</a></li><li><a href="#about">About Us</a></li><li><a href="#umrah">Umrah Packages</a></li><li><a href="#groups">Group Bookings</a></li><li><a href="#contact">Contact Us</a></li></ul>
-                    </div>
-                    <div class="footer-links">
-                        <h4>Services</h4>
-                        <ul><li><a href="#">Air Ticketing</a></li><li><a href="#">Umrah Packages</a></li><li><a href="#">Hotel Reservations</a></li><li><a href="#">Visa Services</a></li><li><a href="#">Travel Insurance</a></li></ul>
-                    </div>
-                    <div class="footer-contact">
-                        <h4>Get In Touch</h4>
-                        <ul>
-                            <li><i class="fas fa-phone-alt"></i> <a href="tel:+923009876543">+92 300 9876543</a></li>
-                            <li><i class="fas fa-envelope"></i> <a href="mailto:info@alsaudiatravel.com">info@alsaudiatravel.com</a></li>
-                            <li><i class="fas fa-location-dot"></i> Makkah Tower, Near Haram, Saudi Arabia</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="footer-bottom">
-                    <p>&copy; 2024 Al Saudia Travel Agency. All Rights Reserved.</p>
-                    <div class="footer-bottom-links"><a href="#">Privacy Policy</a><a href="#">Terms &amp; Conditions</a></div>
-                </div>
+      </div>
+
+      <nav class="nav">
+        <a href="#" class="active">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25A2.25 2.25 0 0 1 13.5 18v-2.25Z" /></svg>
+          Dashboard
+        </a>
+        <a href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3L12 21.75l-1.679-.927m0 0-5.571-3L2.25 12l4.179-2.25m0 0L12 2.25l1.679.927m0 0 5.571 3L21.75 7.5l-4.179 2.25Z" /></svg>
+          Flight Groups
+        </a>
+        <a href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" /></svg>
+          Reservations
+        </a>
+        <a href="#">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.163 9.375 9.375 0 0 0 8.25-6.188c.83-2.102.583-4.476-.683-6.286a9.386 9.386 0 0 0-13.313-2.657A9.386 9.386 0 0 0 2.25 12c0 2.168.745 4.168 2.012 5.78M15 19.128v-.003c0-1.564-.105-3.09-.303-4.5M15 19.128a3.75 3.75 0 0 1-6.182-2.476M15 19.128a3.751 3.751 0 0 0-3.75-3.751m0 0h.008v.015h-.008v-.015Zm0 0h.008v.015h-.008v-.015Z" /></svg>
+          Agents
+        </a>
+      </nav>
+
+      <div class="profile">
+        <div class="profile-left">
+          <div class="avatar"></div>
+          <span class="profile-name">Admin User</span>
+        </div>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" /></svg>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <header class="header">
+        <div class="header-text">
+          <h1>Agency Overview</h1>
+          <p>Welcome back, Admin. Monitoring performance across all regional flight hubs.</p>
+        </div>
+        <button class="btn btn-brand">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          Add New Group
+        </button>
+      </header>
+
+      <!-- KPI Bento -->
+      <div class="bento">
+        <div class="card col-4">
+          <p class="card-label">Total Passengers</p>
+          <div style="display:flex;align-items:baseline;gap:8px;">
+            <span class="card-value">12,842</span>
+            <span class="card-delta">+12%</span>
+          </div>
+        </div>
+        <div class="card col-2">
+          <p class="card-label">Active Groups</p>
+          <span class="card-value card-value-sm">48</span>
+        </div>
+        <div class="card col-2 card-bottom">
+          <p class="card-label">Sold Seats</p>
+          <span class="card-value card-value-sm">892</span>
+        </div>
+        <div class="card col-2">
+          <p class="card-label">Remaining</p>
+          <span class="card-value card-value-sm">124</span>
+        </div>
+        <div class="card col-2 card-gold">
+          <p class="card-label">Pending</p>
+          <span class="card-value card-value-sm">16</span>
+        </div>
+      </div>
+
+      <div class="row">
+        <!-- Schedule Column -->
+        <div class="col-12" style="grid-column: span 4;">
+          <h3 class="section-title">Upcoming Departures</h3>
+          <div class="card departure-card" style="margin-bottom:16px;">
+            <span class="badge">24 days</span>
+            <div class="departure-body">
+              <div class="date-box">
+                <span class="month">Jul</span>
+                <span class="day">06</span>
+              </div>
+              <div class="departure-meta">
+                <p>ISB → BAH</p>
+                <p>Gulf Air · Monday</p>
+              </div>
             </div>
-        </footer>
+            <div class="departure-footer">
+              <span>0 Passengers</span>
+              <a href="#">View List</a>
+            </div>
+          </div>
+          <div class="empty-state">
+            <p>No further departures scheduled</p>
+          </div>
+        </div>
 
-    </div>
+        <!-- Content Block -->
+        <div class="col-12" style="grid-column: span 8;">
+          <div class="tabs">
+            <button class="tab active">Groups</button>
+            <button class="tab">Reservations</button>
+            <button class="tab">Agents</button>
+          </div>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
-    <script type="module" src="app.js"></script>
+          <div class="section-divider">
+            <h4>Destination · Bahrain (BAH)</h4>
+            <span class="line"></span>
+            <span class="count">1 group</span>
+          </div>
+
+          <!-- Flight Card -->
+          <div class="card flight-card" style="margin-bottom:24px;">
+            <div style="padding:24px;">
+              <div class="flight-card-header">
+                <div class="airline">
+                  <div class="airline-logo"><span>GF</span></div>
+                  <div class="airline-info">
+                    <p>ISB → BAH</p>
+                    <p>Gulf Air · 2026-07-06 · 15:30</p>
+                  </div>
+                </div>
+                <div class="seats">
+                  <p>Seats Available</p>
+                  <p>10 / 10</p>
+                </div>
+              </div>
+
+              <div class="flight-meta">
+                <div class="meta-box">
+                  <p>Sale Price</p>
+                  <p>PKR 120,000</p>
+                </div>
+                <div class="meta-box">
+                  <p>Agency Cost</p>
+                  <p>PKR 100,000</p>
+                </div>
+                <div class="meta-actions meta-box" style="background:transparent; padding:0;">
+                  <button class="icon-btn" aria-label="Edit">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L6.832 19.82a4.5 4.5 0 0 1-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 0 1 1.13-1.897L16.863 4.487Zm0 0L19.5 7.125" /></svg>
+                  </button>
+                  <button class="icon-btn danger" aria-label="Delete">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" /></svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="flight-footer">
+              <span>Group ID · GF-BH-2607</span>
+              <a href="#">Manage Passengers</a>
+            </div>
+          </div>
+
+          <!-- Sold Out Card -->
+          <div class="card soldout">
+            <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+              <div class="airline">
+                <div class="airline-logo"><span>PK</span></div>
+                <div class="airline-info">
+                  <p>LHE → DXB</p>
+                  <p>PIA · Flight PK-201 · 09:15</p>
+                </div>
+              </div>
+              <span class="soldout-badge">Sold Out</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
 </body>
 </html>
