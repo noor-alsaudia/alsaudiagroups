@@ -144,9 +144,12 @@ const ERRS = {
 const say = e => ERRS[e.code] || e.message;
 
 function getVerifier(){
-  if(!verifier){
-    verifier = new RecaptchaVerifier(auth, "recaptcha", { size:"invisible" });
-  }
+  if(verifier) return verifier;
+  const host = $("#recaptcha");
+  host.innerHTML = "";
+  const slot = document.createElement("div");
+  host.appendChild(slot);
+  verifier = new RecaptchaVerifier(auth, slot, { size:"invisible" });
   return verifier;
 }
 async function resetVerifier(){
