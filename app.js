@@ -1,7 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
-  RecaptchaVerifier, signInWithPhoneNumber, linkWithCredential, EmailAuthProvider
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   getDatabase, ref, set, push, update, remove, get, onValue
@@ -91,7 +91,7 @@ function listen(path, cb){
 }
 
 /* ---------------- auth screen ---------------- */
-let mode="in", pending=null, verifier=null;
+let mode="in";
 
 /* 03001234567 / +923001234567 / 3001234567  ->  923001234567 */
 function normPhone(raw){
@@ -108,22 +108,18 @@ const pretty = d => "+"+d;
 function paintAuth(){
   const up = mode==="up";
   $("#authTitle").textContent = up ? "Create an account" : "Sign in";
-  $("#authGo").textContent = up ? "Send code" : "Sign in";
+  $("#authGo").textContent = up ? "Create account" : "Sign in";
   $("#signupOnly").classList.toggle("hide",!up);
   $("#switchText").textContent = up ? "Already a member?" : "New here?";
   $("#switchBtn").textContent = up ? "Sign in" : "Create an account";
   $("#auPass").autocomplete = up ? "new-password" : "current-password";
   $("#authSub").textContent = up
-    ? "We'll text you one code to confirm your number. After that it's just your number and password."
+    ? "Your number is your login. Pick a password you'll remember."
     : "Signals, trade breakdowns, and mentoring for your own account.";
-  showStep("details");
   $("#authErr").classList.add("hide");
 }
-function showStep(s){
-  $("#stepDetails").classList.toggle("hide", s!=="details");
-  $("#stepCode").classList.toggle("hide", s!=="code");
-}
-$("#switchBtn").onclick = () => { mode = mode==="up"?"in":"up"; pending=null; paintAuth(); };
+
+$("#switchBtn").onclick = () => { mode = mode==="up"?"in":"up"; paintAuth(); };
 paintAuth();
 
 function authErr(m){ const e=$("#authErr"); e.textContent=m; e.classList.remove("hide"); }
@@ -143,20 +139,6 @@ const ERRS = {
 };
 const say = e => ERRS[e.code] || e.message;
 
-function getVerifier(){
-  if(verifier) return verifier;
-  const host = $("#recaptcha");
-  host.innerHTML = "";
-  const slot = document.createElement("div");
-  host.appendChild(slot);
-  verifier = new RecaptchaVerifier(auth, slot, { size:"invisible" });
-  return verifier;
-}
-async function resetVerifier(){
-  try{ await verifier?.clear(); }catch(e){}
-  verifier=null; $("#recaptcha").innerHTML="";
-}
-
 $("#authGo").onclick = async () => {
   const digits = normPhone($("#auPhone").value), pass = $("#auPass").value;
   if(!phoneOK(digits)) return authErr("Enter a Pakistani mobile number, like 0300 1234567.");
@@ -169,39 +151,16 @@ $("#authGo").onclick = async () => {
       const name = $("#suName").value.trim();
       if(!name){ $("#authGo").disabled=false; return authErr("Enter your name."); }
       if(pass.length<6){ $("#authGo").disabled=false; return authErr("Use at least 6 characters for the password."); }
-      const conf = await signInWithPhoneNumber(auth, "+"+digits, getVerifier());
-      pending = { conf, digits, pass, name };
-      $("#codeTo").textContent = pretty(digits);
-      $("#otpIn").value=""; showStep("code"); $("#otpIn").focus();
+      const cred = await createUserWithEmailAndPassword(auth, phoneEmail(digits), pass);
+      await set(ref(db,"users/"+cred.user.uid), {
+        name, phone: pretty(digits), email: phoneEmail(digits),
+        role:"member", plan:"none", expiresAt:0, createdAt:Date.now()
+      });
     } else {
       await signInWithEmailAndPassword(auth, phoneEmail(digits), pass);
     }
-  }catch(e){ authErr(say(e)); await resetVerifier(); }
+  }catch(e){ authErr(say(e)); }
   $("#authGo").disabled = false;
-};
-
-$("#otpBack").onclick = async () => { pending=null; await resetVerifier(); showStep("details"); };
-
-$("#otpGo").onclick = async () => {
-  const code = $("#otpIn").value.trim();
-  if(code.length<6) return authErr("Enter the 6-digit code.");
-  if(!pending) return authErr("Start again from your number.");
-  $("#otpGo").disabled = true;
-  try{
-    const res = await pending.conf.confirm(code);
-    // attach a password so future logins need no SMS
-    await linkWithCredential(res.user,
-      EmailAuthProvider.credential(phoneEmail(pending.digits), pending.pass));
-    await set(ref(db,"users/"+res.user.uid), {
-      name: pending.name, phone: pretty(pending.digits), email: phoneEmail(pending.digits),
-      role:"member", plan:"none", expiresAt:0, createdAt:Date.now()
-    });
-    pending=null; await resetVerifier();
-  }catch(e){
-    authErr(say(e));
-    if(e.code==="auth/email-already-in-use"){ try{ await signOut(auth); }catch(x){} }
-  }
-  $("#otpGo").disabled = false;
 };
 $("#logoutBtn").onclick = () => signOut(auth);
 
