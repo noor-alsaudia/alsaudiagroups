@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Signal Desk</title>
+<meta name="description" content="Trading signals and mentoring. You keep your own account.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ CONFIG SCREEN ============ -->
+<div id="setup" class="auth hide">
+  <div class="auth-in">
+    <div class="mark-glyph">SD</div>
+    <h1>Add your Firebase keys</h1>
+    <p class="sub">Open this file in an editor and paste your project config into the <span class="num">FIREBASE_CONFIG</span> block near the bottom. Setup steps are in README.md.</p>
+  </div>
+</div>
+
+<div id="boot" class="loading">Loading…</div>
+
+<!-- ============ AUTH ============ -->
+<div id="authView" class="auth hide">
+  <div class="auth-in">
+    <div class="mark-glyph">SD</div>
+    <h1 id="authTitle">Sign in</h1>
+    <p class="sub" id="authSub">Signals, trade breakdowns, and mentoring for your own account.</p>
+    <div id="authErr" class="err hide"></div>
+
+    <div id="stepDetails">
+      <div id="signupOnly" class="hide">
+        <div class="field"><label for="suName">Full name</label><input id="suName" autocomplete="name"></div>
+      </div>
+      <div class="field"><label for="auPhone">Phone number</label><input id="auPhone" inputmode="tel" placeholder="0300 1234567" autocomplete="tel"></div>
+      <div class="field"><label for="auPass">Password</label><input id="auPass" type="password" autocomplete="current-password"></div>
+      <button class="btn" id="authGo">Sign in</button>
+    </div>
+
+    <div id="stepCode" class="hide">
+      <div class="card" style="margin-bottom:14px">
+        <div class="kv"><span>Code sent to</span><b class="num" id="codeTo">—</b></div>
+      </div>
+      <div class="field"><label for="otpIn">6-digit code</label><input id="otpIn" inputmode="numeric" maxlength="6" placeholder="______" autocomplete="one-time-code" style="letter-spacing:.4em;font-family:'IBM Plex Mono',monospace"></div>
+      <button class="btn" id="otpGo">Verify and create account</button>
+      <button class="btn ghost" id="otpBack" style="margin-top:9px">Change number</button>
+    </div>
+
+    <div id="recaptcha"></div>
+
+    <p class="switch">
+      <span id="switchText">New here?</span>
+      <button id="switchBtn">Create an account</button>
+    </p>
+
+    <p class="disclaimer">
+      This is a signal and education service. You open and control your own brokerage account,
+      you place your own trades, and no funds are ever deposited with us. Subscription fees
+      buy access to analysis only. Trading carries risk of loss.
+    </p>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="app" class="hide">
+  <div class="wrap">
+    <header class="topbar">
+      <div class="mark">
+        <div class="mark-glyph">SD</div>
+        <div style="min-width:0">
+          <div class="mark-name" id="brandName">Signal Desk</div>
+          <div class="mark-sub" id="brandRole">Member</div>
+        </div>
+      </div>
+      <button class="iconbtn" id="logoutBtn" title="Sign out" aria-label="Sign out">⏻</button>
+    </header>
+    <main id="view"></main>
+  </div>
+
+  <nav class="nav"><div class="nav-in" id="navBar"></div></nav>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true"></aside>
+<div class="toast" id="toast"></div>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
