@@ -1,253 +1,703 @@
-:root{
-  --bg:#0F1521; --surface:#18202F; --surface-2:#1E2839; --line:#2A3549;
-  --text:#E6EBF2; --muted:#8494AB; --dim:#5D6C85;
-  --brass:#C9A227; --brass-soft:rgba(201,162,39,.14);
-  --long:#23A06B; --short:#D0453F;
-  --r:14px;
-}
-*{box-sizing:border-box;margin:0;padding:0}
-html{-webkit-text-size-adjust:100%}
-body{
-  background:var(--bg); color:var(--text);
-  font-family:'IBM Plex Sans',system-ui,sans-serif;
-  font-size:15px; line-height:1.55;
-  -webkit-font-smoothing:antialiased;
-}
-.num{font-family:'IBM Plex Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}
-button,input,select,textarea{font:inherit;color:inherit}
-button{cursor:pointer;background:none;border:0}
-a{color:inherit}
-:focus-visible{outline:2px solid var(--brass);outline-offset:2px;border-radius:6px}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  getDatabase, ref, set, push, update, remove, get, onValue
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
 
-/* ---------- shell ---------- */
-.wrap{width:min(100%,460px);margin:0 auto;padding:0 16px 96px}
-.topbar{
-  position:sticky;top:0;z-index:20;background:rgba(15,21,33,.92);
-  backdrop-filter:blur(12px);border-bottom:1px solid var(--line);
-  margin:0 -16px 18px;padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.mark{display:flex;align-items:center;gap:10px;min-width:0}
-.mark-glyph{
-  width:34px;height:34px;flex:none;border:1px solid var(--brass);border-radius:9px;
-  display:grid;place-items:center;color:var(--brass);
-  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:15px;
-}
-.mark-name{font-size:15px;font-weight:600;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mark-sub{font-size:11px;color:var(--dim);line-height:1.2}
-.iconbtn{width:36px;height:36px;flex:none;border:1px solid var(--line);border-radius:10px;color:var(--muted);display:grid;place-items:center;font-size:16px}
-.iconbtn:hover{border-color:var(--dim);color:var(--text)}
+/* ======================================================================
+   1. FIREBASE CONFIG  —  paste yours here
+   Firebase console → Project settings → Your apps → Web app → Config
+   ====================================================================== */
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyC33my_HhQu_y33DvEM0tamtBywDqoZxWI",
+  authDomain: "trading-53d15.firebaseapp.com",
+  // Agar aap ne database banate waqt United States (us-central1) chuna hai to yeh line theek hai.
+  // Koi aur region chuna ho to Realtime Database page par jo URL likha hai woh yahan paste karein.
+  databaseURL: "https://trading-53d15-default-rtdb.firebaseio.com",
+  projectId: "trading-53d15",
+  storageBucket: "trading-53d15.firebasestorage.app",
+  messagingSenderId: "498944328847",
+  appId: "1:498944328847:web:5a0f56352cd1e74289dcfa"
+};
 
-/* ---------- generic ---------- */
-h2.page{font-size:24px;font-weight:600;letter-spacing:-.02em;margin:4px 0 4px}
-.lede{color:var(--muted);font-size:13.5px;max-width:60ch;margin-bottom:20px}
-.sec{margin:26px 0 12px;display:flex;align-items:baseline;justify-content:space-between;gap:10px}
-.sec h3{font-size:13px;font-weight:600;color:var(--muted);letter-spacing:.01em}
-.sec span{font-size:12px;color:var(--dim)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px}
-.stack{display:grid;gap:12px}
-.muted{color:var(--muted)}.dim{color:var(--dim)}
-.small{font-size:12.5px}
-.empty{border:1px dashed var(--line);border-radius:var(--r);padding:24px 18px;text-align:center;color:var(--dim);font-size:13.5px}
-.empty b{display:block;color:var(--muted);font-weight:500;margin-bottom:4px}
-.btn{
-  display:block;width:100%;padding:13px;border-radius:11px;
-  background:var(--brass);color:#191203;font-weight:600;font-size:14.5px;text-align:center;
-  transition:filter .15s;
-}
-.btn:hover{filter:brightness(1.08)}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn.ghost{background:none;border:1px solid var(--line);color:var(--text);font-weight:500}
-.btn.ghost:hover{border-color:var(--dim);filter:none}
-.btn.danger{background:none;border:1px solid rgba(208,69,63,.45);color:#E8776F}
-.btn.sm{padding:9px 14px;width:auto;font-size:13px;border-radius:9px}
-.row{display:flex;gap:8px;flex-wrap:wrap}
-.row>.btn{width:auto;flex:1}
+/* ======================================================================
+   2. BRANDING  —  yahan apna naam aur logo daalein
+   LOGO: koi bhi direct image link (jpg/png/svg). GitHub par logo.png upload
+   karke "logo.png" likh dein, ya khali chhod dein to INITIALS dikhenge.
+   ====================================================================== */
+const BRAND = {
+  name: "Signal Desk",
+  logo: "",          // e.g. "logo.png"
+  initials: "SD"     // logo khali ho to yeh dikhta hai
+};
+const TIERS = {
+  basic:  { name:"Signals",  fee:2500,  order:1, for:"Follow the calls on your own account",
+            perks:["3–6 signals a week","Entry, stop-loss and two targets","Signal closed with result posted","WhatsApp alert when a call goes out"] },
+  pro:    { name:"Signals + Analysis", fee:6000, order:2, for:"Understand why each call was taken",
+            perks:["Everything in Signals","Pre-market analysis each session","Written reasoning on every trade","Position-size guidance for your capital"] },
+  mentor: { name:"Mentoring", fee:15000, order:3, for:"Learn to find your own setups",
+            perks:["Everything above","Weekly 1-on-1 call","Your trading journal reviewed","Direct message access"] }
+};
+const TIER_KEYS = ["basic","pro","mentor"];
 
-/* ---------- forms ---------- */
-.field{margin-bottom:13px}
-.field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px}
-.field input,.field select,.field textarea{
-  width:100%;background:var(--bg);border:1px solid var(--line);border-radius:10px;
-  padding:12px;font-size:14.5px;outline:0;
-}
-.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--brass)}
-.field textarea{min-height:76px;resize:vertical}
-.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.err{background:rgba(208,69,63,.12);border:1px solid rgba(208,69,63,.35);color:#EE9A94;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px}
-.ok{background:rgba(35,160,107,.12);border:1px solid rgba(35,160,107,.35);color:#6BD3A3;padding:10px 12px;border-radius:10px;font-size:13px;margin-bottom:12px}
+/* ====================================================================== */
 
-/* ---------- status strip ---------- */
-.status{
-  border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;background:var(--surface);
-}
-.status.live{border-color:rgba(35,160,107,.4);background:linear-gradient(var(--surface),var(--surface)) padding-box,rgba(35,160,107,.05)}
-.status.off{border-color:rgba(201,162,39,.4)}
-.status-plan{font-size:16px;font-weight:600;letter-spacing:-.01em}
-.status-meta{font-size:12px;color:var(--muted);margin-top:2px}
-.dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:7px;vertical-align:1px}
-.dot.on{background:var(--long);box-shadow:0 0 0 3px rgba(35,160,107,.18)}
-.dot.offd{background:var(--brass);box-shadow:0 0 0 3px var(--brass-soft)}
+const $ = s => document.querySelector(s);
 
-/* ---------- signal card ---------- */
-.signal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
-.sig-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:14px 16px 12px}
-.sig-pair{font-size:17px;font-weight:600;letter-spacing:-.01em}
-.sig-when{font-size:11.5px;color:var(--dim);margin-top:1px}
-.side{
-  font-size:11.5px;font-weight:600;padding:5px 10px;border-radius:7px;flex:none;
-  font-family:'IBM Plex Mono',monospace;letter-spacing:.04em;
-}
-.side.buy{background:rgba(35,160,107,.14);color:#4FC192;border:1px solid rgba(35,160,107,.3)}
-.side.sell{background:rgba(208,69,63,.14);color:#E8776F;border:1px solid rgba(208,69,63,.3)}
-
-/* price ladder — sorted high to low, rail on the left */
-.ladder{padding:2px 16px 14px}
-.rung{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:12px;height:38px;position:relative}
-.rail{position:relative;height:100%;display:grid;place-items:center}
-.rail:before{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;background:var(--line);transform:translateX(-50%)}
-.rung:first-child .rail:before{top:50%}
-.rung:last-child .rail:before{bottom:50%}
-.pip{width:9px;height:9px;border-radius:50%;background:var(--surface);border:2px solid var(--dim);position:relative;z-index:1}
-.pip.tp{border-color:var(--long)}
-.pip.sl{border-color:var(--short)}
-.pip.entry{background:var(--text);border-color:var(--text);width:7px;height:7px}
-.rung-label{font-size:12.5px;color:var(--muted)}
-.rung-val{font-size:14.5px;font-weight:500}
-.rung.tp .rung-val{color:#4FC192}
-.rung.sl .rung-val{color:#E8776F}
-.sig-note{padding:0 16px 14px;font-size:13px;color:var(--muted);line-height:1.5}
-.sig-foot{border-top:1px solid var(--line);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:var(--dim)}
-.chip{font-size:11px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);color:var(--muted)}
-.chip.open{border-color:rgba(201,162,39,.4);color:var(--brass)}
-.chip.win{border-color:rgba(35,160,107,.4);color:#4FC192}
-.chip.loss{border-color:rgba(208,69,63,.4);color:#E8776F}
-
-/* locked state */
-.locked .ladder,.locked .sig-note{filter:blur(6px);opacity:.5;pointer-events:none;user-select:none}
-.lockbar{
-  border-top:1px solid rgba(201,162,39,.3);background:var(--brass-soft);
-  padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;
-}
-.lockbar p{font-size:12.5px;color:#E0C368}
-.lockbar button{font-size:12.5px;font-weight:600;color:var(--brass);border-bottom:1px solid rgba(201,162,39,.5);padding-bottom:1px;flex:none}
-
-/* ---------- plans ---------- */
-.tier{border:1px solid var(--line);border-radius:var(--r);padding:16px;background:var(--surface)}
-.tier.pick{border-color:var(--brass);box-shadow:inset 0 0 0 1px rgba(201,162,39,.25)}
-.tier-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
-.tier-name{font-size:16px;font-weight:600}
-.tier-for{font-size:12px;color:var(--dim);margin-top:2px}
-.tier-fee{text-align:right;flex:none}
-.tier-fee b{font-size:19px;font-weight:600}
-.tier-fee small{display:block;font-size:11px;color:var(--dim)}
-.tier ul{list-style:none;display:grid;gap:7px;margin-top:12px}
-.tier li{font-size:13px;color:var(--muted);padding-left:18px;position:relative}
-.tier li:before{content:"";position:absolute;left:2px;top:8px;width:6px;height:6px;border-radius:50%;background:var(--brass);opacity:.7}
-
-/* ---------- table-ish rows ---------- */
-.item{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
-.item-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
-.item b{font-size:14.5px;font-weight:600}
-.item .meta{font-size:12px;color:var(--dim);margin-top:2px}
-.kv{display:flex;justify-content:space-between;gap:12px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--line)}
-.kv:last-child{border:0}
-.kv span{color:var(--muted)}
-
-/* ---------- perf ---------- */
-.perf{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
-.perf:last-child{border:0}
-.perf-m{font-size:13px;color:var(--muted);width:64px}
-.perf-bar{height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden}
-.perf-bar i{display:block;height:100%;border-radius:3px}
-.perf-v{font-size:13.5px;font-weight:500;width:64px;text-align:right}
-
-/* ---------- tabs / nav ---------- */
-.nav{
-  position:fixed;left:0;right:0;bottom:0;z-index:30;
-  background:rgba(15,21,33,.95);backdrop-filter:blur(14px);border-top:1px solid var(--line);
-  padding:8px 0 max(8px,env(safe-area-inset-bottom));
-}
-.nav-in{width:min(100%,460px);margin:0 auto;display:flex}
-.nav button{flex:1;display:grid;gap:3px;justify-items:center;padding:6px 2px;color:var(--dim);font-size:10.5px}
-.nav button i{font-size:16px;font-style:normal;line-height:1}
-.nav button[aria-current="true"]{color:var(--brass)}
-.hide{display:none!important}
-
-/* ---------- auth ---------- */
-.auth{min-height:100dvh;display:grid;place-items:center;padding:24px 16px}
-.auth-in{width:min(100%,380px)}
-.auth h1{font-size:27px;font-weight:600;letter-spacing:-.025em;margin:18px 0 8px}
-.auth p.sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
-.switch{text-align:center;margin-top:16px;font-size:13px;color:var(--muted)}
-.switch button{color:var(--brass);font-weight:500}
-.disclaimer{margin-top:22px;border-top:1px solid var(--line);padding-top:14px;font-size:11.5px;color:var(--dim);line-height:1.6}
-
-/* ---------- sheet ---------- */
-.scrim{position:fixed;inset:0;background:rgba(6,10,17,.7);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
-.scrim.on{opacity:1;pointer-events:auto}
-.sheet{
-  position:fixed;left:0;right:0;bottom:0;z-index:50;background:var(--surface);
-  border-top:1px solid var(--line);border-radius:20px 20px 0 0;
-  width:min(100%,460px);margin:0 auto;max-height:88dvh;overflow:auto;
-  transform:translateY(101%);transition:transform .26s cubic-bezier(.3,.8,.4,1);
-  padding:18px 16px max(20px,env(safe-area-inset-bottom));
-}
-.sheet.on{transform:translateY(0)}
-.sheet-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-.sheet-head h3{font-size:17px;font-weight:600}
-.toast{
-  position:fixed;left:50%;bottom:88px;transform:translateX(-50%) translateY(14px);z-index:70;
-  background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
-  padding:11px 16px;font-size:13px;opacity:0;pointer-events:none;transition:.2s;
-  max-width:calc(100% - 32px);
-}
-.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
-.toast.bad{border-color:rgba(208,69,63,.45)}
-.loading{display:grid;place-items:center;min-height:100dvh;color:var(--dim);font-size:13.5px}
-
-/* ================= logo ================= */
-.mark-glyph img,.auth-in .mark-glyph img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:block}
-.mark-glyph.has-img{border-color:transparent;padding:0;overflow:hidden}
-.auth-in .mark-glyph{width:44px;height:44px;font-size:18px;border-radius:11px}
-
-/* ================= desktop ================= */
-@media (min-width:900px){
-  #app{padding-left:250px}
-
-  .nav{
-    top:0;bottom:0;right:auto;width:250px;
-    border-top:0;border-right:1px solid var(--line);
-    padding:22px 14px;display:flex;flex-direction:column;
+function paintGlyph(node){
+  if(!node) return;
+  if(BRAND.logo){
+    node.classList.add("has-img");
+    node.innerHTML = `<img src="${BRAND.logo}" alt="${BRAND.name}">`;
+  } else {
+    node.classList.remove("has-img");
+    node.textContent = BRAND.initials;
   }
-  .nav-in{flex-direction:column;width:100%;gap:4px}
-  .nav button{
-    flex:none;display:grid;grid-template-columns:20px 1fr;
-    justify-items:start;align-items:center;gap:13px;
-    padding:11px 13px;border-radius:10px;font-size:14px;
-  }
-  .nav button i{font-size:15px}
-  .nav button:hover{background:var(--surface-2);color:var(--text)}
-  .nav button[aria-current="true"]{background:var(--surface);color:var(--brass)}
+}
+function applyBrand(){
+  document.title = BRAND.name;
+  paintGlyph(document.getElementById("authGlyph"));
+  paintGlyph(document.getElementById("appGlyph"));
+  const n = document.getElementById("brandName");
+  if(n) n.textContent = BRAND.name;
+}
+const el = (t,c,h) => { const n=document.createElement(t); if(c)n.className=c; if(h!=null)n.innerHTML=h; return n; };
+const esc = s => String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]));
+const money = n => "Rs " + Number(n||0).toLocaleString("en-PK");
+const num = n => Number(n).toLocaleString("en-PK",{maximumFractionDigits:6});
 
-  .wrap{width:min(100%,780px);padding:0 34px 70px}
-  .topbar{margin:0 -34px 24px;padding:18px 34px}
-  h2.page{font-size:29px}
+function ago(ts){
+  if(!ts) return "";
+  const s = Math.floor((Date.now()-ts)/1000);
+  if(s<60) return "just now";
+  if(s<3600) return Math.floor(s/60)+"m ago";
+  if(s<86400) return Math.floor(s/3600)+"h ago";
+  if(s<604800) return Math.floor(s/86400)+"d ago";
+  return new Date(ts).toLocaleDateString("en-GB",{day:"numeric",month:"short"});
+}
+function dateStr(ts){ return ts ? new Date(ts).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}) : "—"; }
 
-  .sheet{
-    top:50%;bottom:auto;left:50%;right:auto;
-    border:1px solid var(--line);border-radius:18px;
-    max-height:84dvh;width:min(100%,470px);
-    transform:translate(-50%,-44%);padding:22px 22px 24px;
-  }
-  .sheet.on{transform:translate(-50%,-50%)}
-  .toast{bottom:28px}
+let toastTimer;
+function toast(msg, bad){
+  const t=$("#toast"); t.textContent=msg; t.classList.toggle("bad",!!bad); t.classList.add("on");
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove("on"),2600);
+}
+function openSheet(html){
+  $("#sheet").innerHTML=html; $("#sheet").classList.add("on"); $("#scrim").classList.add("on");
+  document.body.style.overflow="hidden";
+}
+function closeSheet(){
+  $("#sheet").classList.remove("on"); $("#scrim").classList.remove("on");
+  document.body.style.overflow="";
+}
+$("#scrim").onclick = closeSheet;
+
+/* ---------------- boot ---------------- */
+applyBrand();
+
+if (String(FIREBASE_CONFIG.apiKey).startsWith("PASTE")) {
+  $("#boot").classList.add("hide");
+  $("#setup").classList.remove("hide");
+  throw new Error("Firebase not configured");
+}
+const app = initializeApp(FIREBASE_CONFIG);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const S = { uid:null, me:null, tab:"home", signals:[], requests:[], members:[], perf:[], pay:null, subs:[] };
+
+function stopAll(){ S.subs.forEach(u=>{try{u()}catch(e){}}); S.subs=[]; }
+function listen(path, cb){
+  const un = onValue(ref(db,path), snap=>{
+    const v = snap.val()||{};
+    cb(Object.entries(v).map(([id,o])=>({id,...o})));
+  }, err=>console.warn(path,err.message));
+  S.subs.push(un);
 }
 
-@media (min-width:1150px){
-  .wrap{width:min(100%,900px)}
-  .stack{grid-template-columns:1fr 1fr;align-items:start}
-  .stack .stack,.stack.one{grid-template-columns:1fr}
+/* ---------------- auth screen ---------------- */
+let mode="in";
+
+/* 03001234567 / +923001234567 / 3001234567  ->  923001234567 */
+function normPhone(raw){
+  let d = String(raw||"").replace(/\D/g,"");
+  if(d.startsWith("00")) d = d.slice(2);
+  if(d.startsWith("0")) d = "92"+d.slice(1);
+  else if(d.length===10) d = "92"+d;
+  return d;
+}
+const phoneOK = d => /^92\d{10}$/.test(d);
+const phoneEmail = d => d + "@" + FIREBASE_CONFIG.authDomain;
+const pretty = d => "+"+d;
+
+function paintAuth(){
+  const up = mode==="up";
+  $("#authTitle").textContent = up ? "Create an account" : "Sign in";
+  $("#authGo").textContent = up ? "Create account" : "Sign in";
+  $("#signupOnly").classList.toggle("hide",!up);
+  $("#switchText").textContent = up ? "Already a member?" : "New here?";
+  $("#switchBtn").textContent = up ? "Sign in" : "Create an account";
+  $("#auPass").autocomplete = up ? "new-password" : "current-password";
+  $("#authSub").textContent = up
+    ? "Your number is your login. Pick a password you'll remember."
+    : "Signals, trade breakdowns, and mentoring for your own account.";
+  $("#authErr").classList.add("hide");
+}
+
+$("#switchBtn").onclick = () => { mode = mode==="up"?"in":"up"; paintAuth(); };
+paintAuth();
+
+function authErr(m){ const e=$("#authErr"); e.textContent=m; e.classList.remove("hide"); }
+const ERRS = {
+  "auth/invalid-credential":"Number or password is wrong.",
+  "auth/user-not-found":"No account with that number. Create one first.",
+  "auth/wrong-password":"That password doesn't match.",
+  "auth/email-already-in-use":"This number already has an account. Sign in instead.",
+  "auth/weak-password":"Use at least 6 characters for the password.",
+  "auth/invalid-verification-code":"That code isn't right. Check the SMS and try again.",
+  "auth/code-expired":"The code expired. Request a new one.",
+  "auth/too-many-requests":"Too many attempts. Wait a few minutes and try again.",
+  "auth/quota-exceeded":"The daily SMS limit is used up. Try again tomorrow.",
+  "auth/network-request-failed":"No connection. Check your internet and try again.",
+  "auth/operation-not-allowed":"Phone sign-in isn't switched on in Firebase yet.",
+  "auth/invalid-app-credential":"This page must run on a hosted domain, not a local file."
+};
+const say = e => ERRS[e.code] || e.message;
+
+$("#authGo").onclick = async () => {
+  const digits = normPhone($("#auPhone").value), pass = $("#auPass").value;
+  if(!phoneOK(digits)) return authErr("Enter a Pakistani mobile number, like 0300 1234567.");
+  if(!pass) return authErr("Enter your password.");
+  $("#authErr").classList.add("hide");
+  $("#authGo").disabled = true;
+
+  try{
+    if(mode==="up"){
+      const name = $("#suName").value.trim();
+      if(!name){ $("#authGo").disabled=false; return authErr("Enter your name."); }
+      if(pass.length<6){ $("#authGo").disabled=false; return authErr("Use at least 6 characters for the password."); }
+      const cred = await createUserWithEmailAndPassword(auth, phoneEmail(digits), pass);
+      await set(ref(db,"users/"+cred.user.uid), {
+        name, phone: pretty(digits), email: phoneEmail(digits),
+        role:"member", plan:"none", expiresAt:0, createdAt:Date.now()
+      });
+    } else {
+      await signInWithEmailAndPassword(auth, phoneEmail(digits), pass);
+    }
+  }catch(e){ authErr(say(e)); }
+  $("#authGo").disabled = false;
+};
+$("#logoutBtn").onclick = () => signOut(auth);
+
+/* ---------------- session ---------------- */
+onAuthStateChanged(auth, async user => {
+  stopAll();
+  $("#boot").classList.add("hide");
+  if(!user){
+    S.uid=null; S.me=null;
+    $("#app").classList.add("hide"); $("#authView").classList.remove("hide");
+    return;
+  }
+  S.uid = user.uid;
+  $("#authView").classList.add("hide"); $("#app").classList.remove("hide");
+  
+
+  S.subs.push(onValue(ref(db,"users/"+user.uid), snap=>{
+    S.me = snap.val() || { name:user.email, role:"member", plan:"none", expiresAt:0 };
+    $("#brandName").textContent = BRAND.name;
+    $("#brandRole").textContent = isAdmin() ? "Admin" : (activeTier() ? TIERS[S.me.plan].name : "Member");
+    if(isAdmin() && !["queue","post","people","record"].includes(S.tab)) S.tab="queue";
+    if(!isAdmin() && !["home","plans","record","me"].includes(S.tab)) S.tab="home";
+    buildNav(); render();
+  }));
+
+  listen("signals", rows => { S.signals = rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); render(); });
+  listen("performance", rows => { S.perf = rows.sort((a,b)=>String(b.month).localeCompare(String(a.month))); render(); });
+  S.subs.push(onValue(ref(db,"settings/payment"), s=>{ S.pay=s.val(); render(); }, ()=>{}));
+
+  // admin-only feeds
+  const g = await get(ref(db,"users/"+user.uid+"/role")).catch(()=>null);
+  if(g && g.val()==="admin"){
+    S.subs.push(onValue(ref(db,"requests"), s=>{
+      const byUser = s.val()||{};
+      S.requests = Object.entries(byUser)
+        .flatMap(([uid,items]) => Object.entries(items||{}).map(([id,o])=>({id,uid,...o})))
+        .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      render();
+    }, err=>console.warn("requests",err.message)));
+    listen("users", rows => { S.members = rows.sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)); render(); });
+  } else {
+    listen("requests/"+user.uid, rows => {
+      S.requests = rows.map(r=>({...r,uid:user.uid})).sort((a,b)=>(b.createdAt||0)-(a.createdAt||0));
+      render();
+    });
+  }
+});
+
+const isAdmin = () => S.me?.role === "admin";
+const activeTier = () => {
+  if(!S.me) return null;
+  const p = S.me.plan;
+  if(!p || p==="none" || !TIERS[p]) return null;
+  return (S.me.expiresAt||0) > Date.now() ? p : null;
+};
+const canSee = sigTier => {
+  const t = activeTier();
+  if(!t) return false;
+  return TIERS[t].order >= TIERS[sigTier||"basic"].order;
+};
+const daysLeft = () => Math.max(0, Math.ceil(((S.me?.expiresAt||0)-Date.now())/86400000));
+
+/* ---------------- nav ---------------- */
+function buildNav(){
+  const tabs = isAdmin()
+    ? [["queue","◫","Requests"],["post","✎","New signal"],["people","♦","Members"],["record","▤","Record"]]
+    : [["home","▲","Signals"],["plans","◈","Plans"],["record","▤","Record"],["me","●","Account"]];
+  const bar=$("#navBar"); bar.innerHTML="";
+  tabs.forEach(([k,ic,label])=>{
+    const b=el("button",null,`<i>${ic}</i>${label}`);
+    b.setAttribute("aria-current", S.tab===k ? "true":"false");
+    b.onclick=()=>{ S.tab=k; buildNav(); render(); window.scrollTo({top:0}); };
+    bar.appendChild(b);
+  });
+}
+
+/* ---------------- render ---------------- */
+function render(){
+  if(!S.me) return;
+  const v=$("#view"); v.innerHTML="";
+  const map = isAdmin()
+    ? { queue:adminQueue, post:adminPost, people:adminPeople, record:adminRecord }
+    : { home:memberHome, plans:memberPlans, record:memberRecord, me:memberAccount };
+  (map[S.tab] || memberHome)(v);
+}
+
+/* ======================= MEMBER ======================= */
+function memberHome(v){
+  const t = activeTier();
+  v.appendChild(el("h2","page","Signals"));
+
+  const strip = el("div","status "+(t?"live":"off"));
+  strip.innerHTML = t
+    ? `<div><div class="status-plan"><span class="dot on"></span>${esc(TIERS[t].name)}</div>
+        <div class="status-meta">${daysLeft()} days left · renews ${dateStr(S.me.expiresAt)}</div></div>`
+    : `<div><div class="status-plan"><span class="dot offd"></span>No active plan</div>
+        <div class="status-meta">Pick a plan to unlock the calls</div></div>`;
+  const cta = el("button","btn sm"+(t?" ghost":""), t?"Extend":"See plans");
+  cta.onclick=()=>{ S.tab="plans"; buildNav(); render(); };
+  strip.appendChild(cta);
+  v.appendChild(strip);
+
+  const open = S.signals.filter(s=>s.status==="open");
+  const closed = S.signals.filter(s=>s.status!=="open").slice(0,12);
+
+  v.appendChild(sec("Open calls", open.length ? open.length+" running" : ""));
+  if(!open.length) v.appendChild(el("div","empty","<b>Nothing running right now</b>New calls appear here the moment they're posted."));
+  else { const st=el("div","stack"); open.forEach(s=>st.appendChild(signalCard(s))); v.appendChild(st); }
+
+  if(closed.length){
+    v.appendChild(sec("Closed", "last "+closed.length));
+    const st=el("div","stack"); closed.forEach(s=>st.appendChild(signalCard(s))); v.appendChild(st);
+  }
+}
+
+function sec(title, right){
+  const s=el("div","sec"); s.appendChild(el("h3",null,esc(title)));
+  if(right) s.appendChild(el("span",null,esc(right)));
+  return s;
+}
+
+function signalCard(s){
+  const unlocked = canSee(s.tier);
+  const c = el("article","signal"+(unlocked?"":" locked"));
+  const side = (s.side||"buy").toLowerCase();
+
+  const head = el("div","sig-head");
+  head.innerHTML = `<div><div class="sig-pair">${esc(s.pair||"—")}</div>
+    <div class="sig-when">${esc(ago(s.createdAt))}${s.tier&&s.tier!=="basic"?" · "+esc(TIERS[s.tier].name):""}</div></div>
+    <div class="side ${side==="sell"?"sell":"buy"}">${side==="sell"?"SELL":"BUY"}</div>`;
+  c.appendChild(head);
+
+  const rungs = [
+    { k:"tp", label:"Target 2", val:s.tp2 },
+    { k:"tp", label:"Target 1", val:s.tp1 },
+    { k:"entry", label:"Entry", val:s.entry },
+    { k:"sl", label:"Stop loss", val:s.sl }
+  ].filter(r=>r.val!=null && r.val!=="").sort((a,b)=>Number(b.val)-Number(a.val));
+
+  const lad = el("div","ladder");
+  rungs.forEach(r=>{
+    lad.appendChild(el("div","rung "+r.k,
+      `<div class="rail"><span class="pip ${r.k}"></span></div>
+       <div class="rung-label">${r.label}</div>
+       <div class="rung-val num">${esc(num(r.val))}</div>`));
+  });
+  c.appendChild(lad);
+
+  if(s.note) c.appendChild(el("p","sig-note",esc(s.note)));
+
+  const foot = el("div","sig-foot");
+  const st = s.status==="open" ? `<span class="chip open">Running</span>`
+    : s.result==="win" ? `<span class="chip win">Target hit</span>`
+    : s.result==="loss" ? `<span class="chip loss">Stopped out</span>`
+    : `<span class="chip">Closed flat</span>`;
+  foot.innerHTML = st + `<span>${s.status==="open"?"":esc(dateStr(s.closedAt||s.createdAt))}</span>`;
+  c.appendChild(foot);
+
+  if(!unlocked){
+    const lb = el("div","lockbar");
+    const need = TIERS[s.tier||"basic"].name;
+    lb.innerHTML = `<p>${activeTier()?"Included in "+esc(need):"Levels are hidden until your plan is active"}</p>`;
+    const b = el("button",null,"Unlock");
+    b.onclick=()=>{ S.tab="plans"; buildNav(); render(); window.scrollTo({top:0}); };
+    lb.appendChild(b); c.appendChild(lb);
+  }
+  return c;
+}
+
+function memberPlans(v){
+  v.appendChild(el("h2","page","Plans"));
+  v.appendChild(el("p","lede","Every plan is a monthly access fee for analysis. Your money stays in your own broker account — we never take deposits or trade on your behalf."));
+
+  const pending = S.requests.find(r=>r.status==="pending");
+  if(pending){
+    v.appendChild(el("div","ok",`Your request for ${esc(TIERS[pending.plan]?.name||pending.plan)} is with the admin. You'll see access open up here once it's approved.`));
+  }
+
+  const cur = activeTier();
+  const st = el("div","stack");
+  TIER_KEYS.forEach(k=>{
+    const t=TIERS[k];
+    const card = el("article","tier"+(cur===k?" pick":""));
+    card.innerHTML = `<div class="tier-top">
+        <div><div class="tier-name">${esc(t.name)}</div><div class="tier-for">${esc(t.for)}</div></div>
+        <div class="tier-fee"><b class="num">${esc(money(t.fee))}</b><small>per month</small></div>
+      </div>
+      <ul>${t.perks.map(p=>`<li>${esc(p)}</li>`).join("")}</ul>`;
+    const b = el("button","btn sm ghost", cur===k ? "Extend this plan" : "Request access");
+    b.style.marginTop="14px"; b.style.width="100%";
+    if(pending){ b.disabled=true; b.textContent="Request pending"; }
+    b.onclick=()=>requestSheet(k);
+    card.appendChild(b);
+    st.appendChild(card);
+  });
+  v.appendChild(st);
+}
+
+function requestSheet(planKey){
+  const t=TIERS[planKey];
+  const p=S.pay||{};
+  const lines = [
+    p.easypaisa ? ["EasyPaisa", p.easypaisa] : null,
+    p.jazzcash ? ["JazzCash", p.jazzcash] : null,
+    p.bank ? ["Bank", p.bank] : null
+  ].filter(Boolean);
+
+  openSheet(`
+    <div class="sheet-head"><h3>${esc(t.name)}</h3><button class="iconbtn" id="xSheet">✕</button></div>
+    <div class="card" style="margin-bottom:14px">
+      <div class="kv"><span>Fee</span><b class="num">${esc(money(t.fee))} / month</b></div>
+      <div class="kv"><span>Months</span><span id="mView" class="num">1</span></div>
+      <div class="kv"><span>Total to send</span><b class="num" id="tView">${esc(money(t.fee))}</b></div>
+    </div>
+    <div class="field"><label for="mSel">How many months</label>
+      <select id="mSel"><option value="1">1 month</option><option value="3">3 months</option><option value="6">6 months</option></select></div>
+    ${lines.length ? `<div class="card" style="margin-bottom:14px">
+        <h3 style="font-size:13px;color:var(--muted);margin-bottom:8px">Send the fee to</h3>
+        ${lines.map(([k,v2])=>`<div class="kv"><span>${esc(k)}</span><b class="num">${esc(v2)}</b></div>`).join("")}
+      </div>` : `<div class="err">Payment details haven't been added yet. Message the admin before sending anything.</div>`}
+    <div class="field"><label for="refIn">Transaction ID from your receipt</label><input id="refIn" placeholder="e.g. 91827364523"></div>
+    <button class="btn" id="sendReq">Submit for approval</button>
+    <p class="disclaimer">This fee buys access to analysis. It is not an investment, it is not pooled with anyone else's money, and it does not earn a return.</p>
+  `);
+  $("#xSheet").onclick=closeSheet;
+  const recalc=()=>{
+    const m=Number($("#mSel").value);
+    $("#mView").textContent=m; $("#tView").textContent=money(t.fee*m);
+  };
+  $("#mSel").onchange=recalc;
+
+  $("#sendReq").onclick = async () => {
+    const months=Number($("#mSel").value), ref2=$("#refIn").value.trim();
+    if(!ref2) return toast("Add the transaction ID from your receipt.",true);
+    $("#sendReq").disabled=true;
+    try{
+      await push(ref(db,"requests/"+S.uid),{
+        name:S.me.name||"", phone:S.me.phone||"", email:S.me.email||"",
+        plan:planKey, months, amount:t.fee*months, ref:ref2,
+        status:"pending", createdAt:Date.now()
+      });
+      closeSheet(); toast("Sent. The admin will confirm shortly.");
+    }catch(e){ toast(e.message,true); $("#sendReq").disabled=false; }
+  };
+}
+
+function memberRecord(v){
+  v.appendChild(el("h2","page","Track record"));
+  v.appendChild(el("p","lede","Monthly results, posted after each month closes. Past results don't predict future ones."));
+  v.appendChild(perfList());
+
+  const done = S.signals.filter(s=>s.status!=="open");
+  const wins = done.filter(s=>s.result==="win").length;
+  if(done.length){
+    const c=el("div","card"); c.style.marginTop="18px";
+    c.innerHTML=`<div class="kv"><span>Calls closed</span><b class="num">${done.length}</b></div>
+      <div class="kv"><span>Targets hit</span><b class="num">${wins}</b></div>
+      <div class="kv"><span>Hit rate</span><b class="num">${Math.round(wins/done.length*100)}%</b></div>`;
+    v.appendChild(c);
+  }
+}
+
+function perfList(){
+  if(!S.perf.length) return el("div","empty","<b>No months posted yet</b>Results go up at the end of each month.");
+  const box=el("div","card");
+  const max=Math.max(...S.perf.map(p=>Math.abs(Number(p.returnPct)||0)),1);
+  S.perf.forEach(p=>{
+    const val=Number(p.returnPct)||0, pos=val>=0;
+    const r=el("div","perf");
+    r.innerHTML=`<div class="perf-m">${esc(p.month||"")}</div>
+      <div class="perf-bar"><i style="width:${Math.abs(val)/max*100}%;background:${pos?"var(--long)":"var(--short)"}"></i></div>
+      <div class="perf-v num" style="color:${pos?"#4FC192":"#E8776F"}">${pos?"+":""}${val}%</div>`;
+    box.appendChild(r);
+  });
+  return box;
+}
+
+function memberAccount(v){
+  v.appendChild(el("h2","page","Account"));
+  const t=activeTier();
+  const c=el("div","card");
+  c.innerHTML=`<div class="kv"><span>Name</span><b>${esc(S.me.name||"—")}</b></div>
+    <div class="kv"><span>Phone</span><b class="num">${esc(S.me.phone||"—")}</b></div>
+    <div class="kv"><span>Plan</span><b>${t?esc(TIERS[t].name):"None"}</b></div>
+    <div class="kv"><span>Valid until</span><b>${t?esc(dateStr(S.me.expiresAt)):"—"}</b></div>`;
+  v.appendChild(c);
+
+  if(S.requests.length){
+    v.appendChild(sec("Your requests"));
+    const st=el("div","stack");
+    S.requests.forEach(r=>{
+      const i=el("div","item");
+      i.innerHTML=`<div class="item-top">
+        <div><b>${esc(TIERS[r.plan]?.name||r.plan)}</b>
+        <div class="meta">${r.months} month${r.months>1?"s":""} · ${esc(money(r.amount))} · ${esc(ago(r.createdAt))}</div></div>
+        <span class="chip ${r.status==="approved"?"win":r.status==="rejected"?"loss":"open"}">${esc(r.status)}</span></div>`;
+      st.appendChild(i);
+    });
+    v.appendChild(st);
+  }
+
+  const out=el("button","btn ghost","Sign out"); out.style.marginTop="18px";
+  out.onclick=()=>signOut(auth); v.appendChild(out);
+
+  v.appendChild(el("p","disclaimer","We do not hold client funds, manage accounts, or guarantee returns. Every trade you place is your own decision on your own account."));
+}
+
+/* ======================= ADMIN ======================= */
+function adminQueue(v){
+  v.appendChild(el("h2","page","Requests"));
+  const pend = S.requests.filter(r=>r.status==="pending");
+  const rest = S.requests.filter(r=>r.status!=="pending").slice(0,15);
+
+  v.appendChild(sec("Waiting on you", pend.length?pend.length+" pending":""));
+  if(!pend.length) v.appendChild(el("div","empty","<b>Queue is clear</b>New subscription requests land here."));
+  else{
+    const st=el("div","stack");
+    pend.forEach(r=>{
+      const i=el("div","item");
+      i.innerHTML=`<div class="item-top">
+          <div><b>${esc(r.name||r.email)}</b>
+          <div class="meta">${esc(TIERS[r.plan]?.name||r.plan)} · ${r.months}mo · ${esc(ago(r.createdAt))}</div></div>
+          <b class="num">${esc(money(r.amount))}</b></div>
+        <div class="kv" style="margin-top:10px"><span>Transaction ID</span><b class="num">${esc(r.ref||"—")}</b></div>
+        <div class="kv"><span>WhatsApp</span><b class="num">${esc(r.phone||"—")}</b></div>`;
+      const row=el("div","row"); row.style.marginTop="12px";
+      const ok=el("button","btn sm","Approve & activate");
+      const no=el("button","btn sm danger","Reject");
+      ok.onclick=()=>approve(r,ok); no.onclick=()=>decide(r,"rejected");
+      row.append(ok,no); i.appendChild(row); st.appendChild(i);
+    });
+    v.appendChild(st);
+  }
+
+  if(rest.length){
+    v.appendChild(sec("Handled"));
+    const st=el("div","stack");
+    rest.forEach(r=>{
+      const i=el("div","item");
+      i.innerHTML=`<div class="item-top"><div><b>${esc(r.name||r.email)}</b>
+        <div class="meta">${esc(TIERS[r.plan]?.name||r.plan)} · ${esc(ago(r.createdAt))}</div></div>
+        <span class="chip ${r.status==="approved"?"win":"loss"}">${esc(r.status)}</span></div>`;
+      st.appendChild(i);
+    });
+    v.appendChild(st);
+  }
+}
+
+async function approve(r, btn){
+  btn.disabled=true;
+  try{
+    const snap = await get(ref(db,"users/"+r.uid));
+    const u = snap.val()||{};
+    const from = Math.max(Number(u.expiresAt)||0, Date.now());
+    const until = from + r.months*30*86400000;
+    await update(ref(db,"users/"+r.uid), { plan:r.plan, expiresAt:until });
+    await update(ref(db,`requests/${r.uid}/${r.id}`), { status:"approved", handledAt:Date.now() });
+    toast(`${u.name||"Member"} active until ${dateStr(until)}`);
+  }catch(e){ toast(e.message,true); btn.disabled=false; }
+}
+async function decide(r,status){
+  try{ await update(ref(db,`requests/${r.uid}/${r.id}`),{status,handledAt:Date.now()}); toast("Marked "+status); }
+  catch(e){ toast(e.message,true); }
+}
+
+function adminPost(v){
+  v.appendChild(el("h2","page","New signal"));
+  const f=el("div","card");
+  f.innerHTML=`
+    <div class="field"><label for="fPair">Instrument</label><input id="fPair" placeholder="EURUSD, BTCUSDT, OGDC"></div>
+    <div class="grid2">
+      <div class="field"><label for="fSide">Direction</label><select id="fSide"><option value="buy">Buy</option><option value="sell">Sell</option></select></div>
+      <div class="field"><label for="fTier">Visible to</label><select id="fTier">${TIER_KEYS.map(k=>`<option value="${k}">${esc(TIERS[k].name)}</option>`).join("")}</select></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="fEntry">Entry</label><input id="fEntry" inputmode="decimal"></div>
+      <div class="field"><label for="fSl">Stop loss</label><input id="fSl" inputmode="decimal"></div>
+    </div>
+    <div class="grid2">
+      <div class="field"><label for="fTp1">Target 1</label><input id="fTp1" inputmode="decimal"></div>
+      <div class="field"><label for="fTp2">Target 2</label><input id="fTp2" inputmode="decimal"></div>
+    </div>
+    <div class="field"><label for="fNote">Reasoning shown to members</label><textarea id="fNote" placeholder="Why this setup, and how to manage it."></textarea></div>`;
+  const go=el("button","btn","Post signal");
+  go.onclick=async()=>{
+    const pair=$("#fPair").value.trim(), entry=$("#fEntry").value.trim(), sl=$("#fSl").value.trim();
+    if(!pair||!entry||!sl) return toast("Instrument, entry and stop loss are required.",true);
+    go.disabled=true;
+    try{
+      await push(ref(db,"signals"),{
+        pair, side:$("#fSide").value, tier:$("#fTier").value,
+        entry, sl, tp1:$("#fTp1").value.trim()||null, tp2:$("#fTp2").value.trim()||null,
+        note:$("#fNote").value.trim()||null, status:"open", createdAt:Date.now(), by:S.me.name||""
+      });
+      toast("Signal posted"); ["fPair","fEntry","fSl","fTp1","fTp2","fNote"].forEach(i=>$("#"+i).value="");
+    }catch(e){ toast(e.message,true); }
+    go.disabled=false;
+  };
+  f.appendChild(go); v.appendChild(f);
+
+  const open=S.signals.filter(s=>s.status==="open");
+  v.appendChild(sec("Running", open.length?open.length+" open":""));
+  if(!open.length) v.appendChild(el("div","empty","<b>No open calls</b>Anything you post shows up here to close later."));
+  else{
+    const st=el("div","stack");
+    open.forEach(s=>{
+      const box=el("div","stack");
+      box.appendChild(signalCard(s));
+      const row=el("div","row");
+      const w=el("button","btn sm ghost","Target hit");
+      const l=el("button","btn sm danger","Stopped out");
+      const fl=el("button","btn sm ghost","Closed flat");
+      w.onclick=()=>close_(s,"win"); l.onclick=()=>close_(s,"loss"); fl.onclick=()=>close_(s,"flat");
+      row.append(w,l,fl); box.appendChild(row);
+      st.appendChild(box);
+    });
+    v.appendChild(st);
+  }
+}
+async function close_(s,result){
+  try{ await update(ref(db,"signals/"+s.id),{status:"closed",result,closedAt:Date.now()}); toast("Signal closed"); }
+  catch(e){ toast(e.message,true); }
+}
+
+function adminPeople(v){
+  v.appendChild(el("h2","page","Members"));
+  const active=S.members.filter(m=>(m.expiresAt||0)>Date.now()).length;
+  const c=el("div","card");
+  c.innerHTML=`<div class="kv"><span>Total accounts</span><b class="num">${S.members.length}</b></div>
+    <div class="kv"><span>Active subscriptions</span><b class="num">${active}</b></div>
+    <div class="kv"><span>Expired or never subscribed</span><b class="num">${S.members.length-active}</b></div>`;
+  v.appendChild(c);
+
+  const search=el("div","field"); search.style.margin="16px 0 0";
+  search.innerHTML=`<input id="mSearch" placeholder="Search name, email or number">`;
+  v.appendChild(search);
+
+  const list=el("div","stack"); list.style.marginTop="12px"; v.appendChild(list);
+  const draw=(q="")=>{
+    list.innerHTML="";
+    const rows=S.members.filter(m=>{
+      if(!q) return true;
+      return [m.name,m.email,m.phone].join(" ").toLowerCase().includes(q.toLowerCase());
+    });
+    if(!rows.length){ list.appendChild(el("div","empty","<b>No one matches that</b>Try a shorter search.")); return; }
+    rows.forEach(m=>{
+      const live=(m.expiresAt||0)>Date.now();
+      const i=el("div","item");
+      i.innerHTML=`<div class="item-top">
+        <div><b>${esc(m.name||m.email||"Member")}</b>
+        <div class="meta">${esc(m.phone||m.email||"")}</div></div>
+        <span class="chip ${live?"win":""}">${live?esc(TIERS[m.plan]?.name||m.plan):"inactive"}</span></div>
+        ${live?`<div class="kv" style="margin-top:9px"><span>Valid until</span><b>${esc(dateStr(m.expiresAt))}</b></div>`:""}`;
+      const row=el("div","row"); row.style.marginTop="10px";
+      const ext=el("button","btn sm ghost","+30 days");
+      ext.onclick=async()=>{
+        const from=Math.max(m.expiresAt||0,Date.now());
+        await update(ref(db,"users/"+m.id),{expiresAt:from+30*86400000, plan:m.plan&&m.plan!=="none"?m.plan:"basic"});
+        toast("Extended 30 days");
+      };
+      const rev=el("button","btn sm danger","End access");
+      rev.onclick=async()=>{ await update(ref(db,"users/"+m.id),{expiresAt:0,plan:"none"}); toast("Access ended"); };
+      row.append(ext,rev); i.appendChild(row);
+      list.appendChild(i);
+    });
+  };
+  draw();
+  $("#mSearch").oninput=e=>draw(e.target.value);
+}
+
+function adminRecord(v){
+  v.appendChild(el("h2","page","Track record"));
+  const f=el("div","card");
+  f.innerHTML=`<div class="grid2">
+      <div class="field"><label for="pM">Month</label><input id="pM" placeholder="Sep 2026"></div>
+      <div class="field"><label for="pR">Return %</label><input id="pR" inputmode="decimal" placeholder="6.4"></div>
+    </div>`;
+  const add=el("button","btn","Publish month");
+  add.onclick=async()=>{
+    const m=$("#pM").value.trim(), r=$("#pR").value.trim();
+    if(!m||r==="") return toast("Month and return are required.",true);
+    await push(ref(db,"performance"),{month:m,returnPct:Number(r),createdAt:Date.now()});
+    $("#pM").value=""; $("#pR").value=""; toast("Published");
+  };
+  f.appendChild(add); v.appendChild(f);
+
+  v.appendChild(sec("Published"));
+  v.appendChild(perfList());
+  if(S.perf.length){
+    const st=el("div","stack"); st.style.marginTop="12px";
+    S.perf.forEach(p=>{
+      const b=el("button","btn sm danger","Remove "+esc(p.month));
+      b.onclick=async()=>{ await remove(ref(db,"performance/"+p.id)); toast("Removed"); };
+      st.appendChild(b);
+    });
+    v.appendChild(st);
+  }
+
+  v.appendChild(sec("Payment details members see"));
+  const p=S.pay||{};
+  const pf=el("div","card");
+  pf.innerHTML=`
+    <div class="field"><label for="gE">EasyPaisa</label><input id="gE" value="${esc(p.easypaisa||"")}" placeholder="03xx xxxxxxx — Account title"></div>
+    <div class="field"><label for="gJ">JazzCash</label><input id="gJ" value="${esc(p.jazzcash||"")}"></div>
+    <div class="field"><label for="gB">Bank</label><input id="gB" value="${esc(p.bank||"")}" placeholder="Bank, IBAN, title"></div>`;
+  const save=el("button","btn ghost","Save payment details");
+  save.onclick=async()=>{
+    await set(ref(db,"settings/payment"),{easypaisa:$("#gE").value.trim(),jazzcash:$("#gJ").value.trim(),bank:$("#gB").value.trim()});
+    toast("Saved");
+  };
+  pf.appendChild(save); v.appendChild(pf);
 }
