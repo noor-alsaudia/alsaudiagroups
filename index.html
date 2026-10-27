@@ -5702,6 +5702,18 @@ function buildPackageDesignerScreen(){
             '<button class="btn btn-sm btn-green" onclick="shareDesignerWhatsApp()"><i class="ti ti-brand-whatsapp"></i>WhatsApp</button>'+
           '</div>'+
         '</div>'+
+        '<div id="dz-badge-row" style="background:#FFEBED;border:1.5px solid #F0A5AE;border-radius:8px;padding:10px 14px;margin-bottom:10px;display:none">'+
+          '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">'+
+            '<div style="font-size:11px;font-weight:800;color:#8B0A1E;letter-spacing:0.5px;text-transform:uppercase;flex:0 0 100%">🏷️ Promo Badge (round circle on header) <span style="font-weight:400;text-transform:none;color:#5A1F1F;letter-spacing:0">— sirf Promo design mein dikhega</span></div>'+
+            '<label style="font-size:10.5px;font-weight:700;color:#5A1F1F">Line 1 (big):</label>'+
+            '<input type="text" id="dz-badge-top" value="25%" oninput="dzNotesChanged()" maxlength="12" placeholder="25% / FREE / PROMO" style="padding:5px 10px;border:1px solid #D48699;border-radius:5px;font-family:inherit;font-size:12px;background:#fff;font-weight:800;width:120px">'+
+            '<label style="font-size:10.5px;font-weight:700;color:#5A1F1F">Line 2 (medium):</label>'+
+            '<input type="text" id="dz-badge-mid" value="OFF" oninput="dzNotesChanged()" maxlength="14" placeholder="OFF / FARE" style="padding:5px 10px;border:1px solid #D48699;border-radius:5px;font-family:inherit;font-size:12px;background:#fff;font-weight:700;width:120px">'+
+            '<label style="font-size:10.5px;font-weight:700;color:#5A1F1F">Line 3 (small):</label>'+
+            '<input type="text" id="dz-badge-bot" value="SAVE NOW" oninput="dzNotesChanged()" maxlength="18" placeholder="SAVE NOW / LIMITED" style="padding:5px 10px;border:1px solid #D48699;border-radius:5px;font-family:inherit;font-size:11px;background:#fff;font-weight:700;width:150px">'+
+            '<label style="font-size:10.5px;font-weight:700;color:#5A1F1F;display:flex;align-items:center;gap:4px"><input type="checkbox" id="dz-badge-show" checked onchange="dzNotesChanged()" style="margin:0"> Show badge</label>'+
+          '</div>'+
+        '</div>'+
         '<div style="background:#FFF8E1;border:1.5px solid #F0D597;border-radius:8px;padding:10px 14px;margin-bottom:12px">'+
           '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:10px;flex-wrap:wrap">'+
             '<div style="font-size:11px;font-weight:800;color:#7A5A12;letter-spacing:0.5px;text-transform:uppercase">📝 Note / Advertisement <span style="font-weight:400;text-transform:none;color:#5A4A1F;letter-spacing:0">(optional \u2014 ek line per note, saari 4 designs mein dikhega)</span></div>'+
@@ -5888,8 +5900,8 @@ function buildPackageDesignerScreen(){
   '@import url(\"https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap\");'+
   '.vA-sheet{width:1080px;background:#fff;position:relative;overflow:hidden;font-family:\'Inter\',\'Plus Jakarta Sans\',sans-serif;color:#1a1a1a;box-shadow:0 15px 50px rgba(0,0,0,0.15)}'+
   '.vA-hero{position:relative;height:420px;overflow:hidden}'+
-  '.vA-hero-img{position:absolute;inset:0;background-image:url(\"https://images.unsplash.com/photo-1591825729269-caeb344f6df2?auto=format&fit=crop&w=1600&q=80\");background-size:cover;background-position:center 40%}'+
-  '.vA-hero-img::after{content:\'\';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,30,20,0.65) 0%,rgba(10,30,20,0.3) 40%,rgba(10,30,20,0.85) 100%)}'+
+  '.vA-hero-img{position:absolute;inset:-10px;background-size:cover;background-position:center 35%;filter:blur(2.5px) brightness(0.78) contrast(1.05);transform:scale(1.05)}'+
+  '.vA-hero-img::after{content:\'\';position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,25,15,0.55) 0%,rgba(5,25,15,0.25) 35%,rgba(5,25,15,0.85) 100%)}'+
   '.vA-hero-content{position:relative;z-index:2;padding:30px 50px;color:#fff;height:100%;display:flex;flex-direction:column;justify-content:space-between}'+
   '.vA-top-bar{display:flex;justify-content:space-between;align-items:center}'+
   '.vA-logo-brand{display:flex;align-items:center;gap:14px}'+
@@ -6014,6 +6026,9 @@ function setSheetStyle(style){
       else btn.classList.remove('dz-print-active');
     }
   });
+  // Toggle badge-editor row — Promo mein hi dikhega
+  var br = document.getElementById('dz-badge-row');
+  if(br) br.style.display = (style==='promo') ? '' : 'none';
   renderDesignerPreview();
 }
 
